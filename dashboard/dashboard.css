@@ -80,7 +80,7 @@
 .clock__head { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
 .clock__now { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .clock__now .dd-chip { max-width: 240px; }
-.clock__head [hidden] { display: none; }
+.clock__now[hidden] { display: none; }
 .status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--radius-pill); font-size: 12px; line-height: 16px; background: var(--surface-150); color: var(--ink-650); }
 .status__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-subtle); }
 .clock[data-state="in"] .status { background: var(--green-tint); color: var(--green-text); }
@@ -95,7 +95,9 @@
 
 /* Time-of-day timeline (DESIGN.md component) */
 .tl { margin-top: 24px; }
-.clock__period { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.clock__period { display: flex; align-items: center; gap: 12px 16px; flex-wrap: nowrap; }
+.clock__period-title { white-space: nowrap; margin-right: 4px; }
+.clock__period .toolbar__range { margin-left: auto; }
 .tl__track { position: relative; height: 16px; border-radius: var(--radius); background: var(--surface-200); overflow: hidden; }
 .tl__seg { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
 .tl__seg--work { background: var(--green); }
@@ -142,7 +144,7 @@
   transition: border-color .15s;
 }
 .search:hover { border-color: var(--hover-support); }
-.search:focus-within { border-color: var(--primary-100); box-shadow: var(--focus-ring); }
+.search:focus-within { border-color: var(--hover-support); box-shadow: none; }
 .search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; color: var(--ink); caret-color: var(--primary); font-weight: 300; }
 .search input:focus-visible { box-shadow: none; } /* the field's focus ring is the indicator */
 .search input::placeholder { color: var(--ink-subtle); }
@@ -174,6 +176,9 @@
 .empty strong { display: block; color: var(--ink); font-weight: 400; margin-bottom: 4px; }
 
 /* ---------- Tracked hours ---------- */
+.hours { position: relative; }
+.hours > .widget__head { position: absolute; top: 20px; right: 20px; height: 44px; margin: 0; align-items: center; }
+@container hours (max-width: 720px) { .hours > .widget__head { position: static; height: auto; margin-bottom: 16px; } }
 .hours__body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; align-items: stretch; }
 .stats { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 20px 48px; margin: 0; }
 .stat { display: flex; align-items: center; gap: 16px; }
@@ -245,7 +250,7 @@
 .map[hidden] { display: none; }
 .map svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .map__pin {
-  position: absolute; transform: translate(-50%, -50%);
+  position: absolute; transform: translate(-50%, -50%); pointer-events: none;
   width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
 }
 .map__pin::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 2px var(--surface); }
@@ -253,7 +258,6 @@
 .map__pin[data-tone="in"] { color: var(--green); }
 .map__pin[data-tone="break"] { color: var(--yellow); }
 .map__pin[data-tone="out"] { color: var(--ink-subtle); }
-.map__pin[aria-pressed="true"]::after { opacity: .4; }
 .map__name {
   position: absolute; left: calc(100% - 4px); top: 50%; transform: translateY(-50%);
   padding: 2px 8px; border-radius: var(--radius-pill); white-space: nowrap;

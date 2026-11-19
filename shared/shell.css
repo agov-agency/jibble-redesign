@@ -469,7 +469,7 @@
 .dd.is-open .dd__btn .i { color: var(--primary-text); }
 .dd__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-subtle); }
 .dd.is-filled .dd__value { color: var(--ink); }
-.dd__btn .i { flex: none; color: var(--ink); transition: transform .15s; }
+.dd__btn .i { flex: none; width: 16px; height: 16px; color: var(--ink); transition: transform .15s; }
 .dd.is-open .dd__btn .i { transform: rotate(180deg); }
 .dd-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: var(--radius-pill); font-size: 12px; line-height: 16px; font-weight: 400; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .dd-chip--color { color: var(--chip); background: color-mix(in srgb, var(--chip) 8%, white); border: 1px solid color-mix(in srgb, var(--chip) 14%, white); }

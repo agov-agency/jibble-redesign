@@ -7,6 +7,7 @@ import react from "@vitejs/plugin-react";
 const CLASSIC_SCRIPTS = [
   "shared/account.js",
   "shared/clock-panel.js",
+  "shared/top-clock.js",
   "shared/date-picker.js",
   "shared/menu-search.js",
   "shared/time-off-store.js",

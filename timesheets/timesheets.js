@@ -676,7 +676,7 @@
       else if (col.kind === "last") body = c.lastOut ? clock12(c.lastOut.t) : c.status === "in" || c.status === "break" ? `<span class="tag tag--${c.status === "in" ? "ongoing" : "break"}">${c.status === "in" ? "ongoing" : "on break"}</span>` : null;
       else if (col.kind === "reg") { const r = payroll(c).regular; body = r ? hhmm(r) : null; }
       else if (col.kind === "brk") body = c.brk ? hmm(c.brk) : null;
-      else body = c.acts.length ? `<span class="acts">${c.acts.map(a => { const A = ACTIVITIES.find(x => x.id === a); return `<span class="ap" style="--c:${A.color}">${esc(A.name)}</span>`; }).join("")}</span>` : null;
+      else body = c.acts.length ? `<span class="acts">${c.acts.map(a => { const A = ACTIVITIES.find(x => x.id === a); return A ? `<span class="ap" style="--c:${A.color}">${esc(A.name)}</span>` : ""; }).join("")}</span>` : null;
       const tag = col.kind === "first" ? tagFor(c.info) : "";
       return `<a class="cell" href="${href}" aria-label="${esc(m.name)}, ${esc(col.label)}: ${body ? String(body).replace(/<[^>]+>/g, " ").trim() : "none"}">${tag}${body && body.startsWith("<") ? body : `<span class="cell__h${body ? "" : " is-empty"}">${body || "–"}</span>`}</a>`;
     }
@@ -931,8 +931,8 @@
     $("#topLast").textContent = txt;
     $("#clockCtl").title = txt;
     const A = ACTIVITIES.find(a => a.id === state.activity), Pj = PROJECTS.find(p => p.id === state.project);
-    $("#activityLabel").textContent = A.name; $("#activityBtn").setAttribute("aria-label", `Activity: ${A.name}`);
-    $("#projectLabel").textContent = Pj.name; $("#projectBtn").setAttribute("aria-label", `Project: ${Pj.name}`);
+    $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").setAttribute("aria-label", `Activity: ${A?.name ?? "none"}`);
+    $("#projectLabel").textContent = Pj?.name ?? "No project"; $("#projectBtn").setAttribute("aria-label", `Project: ${Pj?.name ?? "none"}`);
     const prev = lastClockIn(), resume = resumeContent(ACTIVITIES.find(a => a.id === prev?.act), PROJECTS.find(p => p.id === prev?.proj));
     const top = $("#topResumeBtn");
     top.hidden = st !== "out";
@@ -1128,6 +1128,9 @@
     sel._sync();
   }
   $$("#entryForm select[data-combo]").forEach(enhanceSelect);
+  enhanceDateInput(entryForm.date, "Date");
+  enhanceSelectField(entryForm.task, "Task");
+  $$("#exportForm select").forEach(s => enhanceSelectField(s, s.closest(".field").querySelector(".field__label").textContent.trim()));
   function setKind(kind) {
     $$("#kindSeg .seg__opt").forEach(b => { const on = b.dataset.kind === kind; b.setAttribute("aria-checked", on); b.tabIndex = on ? 0 : -1; });
     $("#typeSeg").hidden = kind === "hours";

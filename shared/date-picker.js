@@ -8,7 +8,7 @@ function createDatePicker(trigger, opts = {}) {
   const day = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const same = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   const today = day(new Date());
-  const max = opts.max ? day(opts.max) : null;
+  let max = opts.max ? day(opts.max) : null;
   const chevron = d => `<svg class="i" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
   let selected = day(opts.value || today), view = "days", cursor = new Date(selected); /* cursor: the date that has keyboard focus */
 
@@ -70,7 +70,7 @@ function createDatePicker(trigger, opts = {}) {
   };
 
   const focusCell = () => main.querySelector('.dp__cell[tabindex="0"]')?.focus();
-  const label = () => same(selected, today) ? "Today" : selected.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", year: selected.getFullYear() === today.getFullYear() ? undefined : "numeric" });
+  const label = () => opts.empty && opts.empty() ? "Select a date" : same(selected, today) ? "Today" : selected.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", year: selected.getFullYear() === today.getFullYear() ? undefined : "numeric" });
   const paint = () => { const s = trigger.querySelector("span"); if (s) s.textContent = label(); };
   const isOpen = () => !pop.hidden;
   const close = refocus => {
@@ -163,6 +163,95 @@ function createDatePicker(trigger, opts = {}) {
   return {
     get value() { return new Date(selected); },
     set value(d) { selected = day(d); cursor = new Date(selected); paint(); },
+    set max(d) { max = d ? day(d) : null; paint(); },
     close
   };
+}
+
+/* Swap a native <input type="date"> for the clock-in panel's field + date picker. The input stays as the form value
+   (ISO yyyy-mm-dd); its value, max, disabled and aria-invalid keep working, so existing form code doesn't change. */
+function enhanceDateInput(input, label) {
+  const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const parse = v => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null; };
+  const wrap = document.createElement("div"), btn = document.createElement("button");
+  wrap.className = "dp-wrap";
+  btn.type = "button"; btn.className = "time-field time-field--static";
+  btn.setAttribute("aria-label", label || "Date");
+  btn.innerHTML = `<span></span><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg>`;
+  input.after(wrap); wrap.append(btn); input.hidden = true; input.tabIndex = -1;
+  const text = btn.firstChild;
+  const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+  const picker = createDatePicker(btn, { empty: () => !parse(proto.get.call(input)), onChange: d => { setValue(iso(d)); input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); } });
+  const sync = () => {
+    const d = parse(proto.get.call(input));
+    text.style.color = d ? "" : "var(--ink-subtle)";
+    btn.disabled = input.disabled;
+    btn.classList.toggle("is-invalid", input.getAttribute("aria-invalid") === "true");
+    picker.value = d || new Date();
+    picker.max = parse(input.max);
+  };
+  const setValue = v => { proto.set.call(input, v); input.removeAttribute("aria-invalid"); sync(); };
+  Object.defineProperty(input, "value", { get() { return proto.get.call(this); }, set(v) { proto.set.call(this, v); sync(); }, configurable: true });
+  const dis = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "disabled");
+  Object.defineProperty(input, "disabled", { get() { return dis.get.call(this); }, set(v) { dis.set.call(this, v); sync(); }, configurable: true });
+  const mxd = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "max");
+  Object.defineProperty(input, "max", { get() { return mxd.get.call(this); }, set(v) { mxd.set.call(this, v); sync(); }, configurable: true });
+  new MutationObserver(sync).observe(input, { attributes: true, attributeFilter: ["aria-invalid"] });
+  sync();
+}
+
+/* Swap a native <select> for the clock-in panel's dropdown field (.dd). The select stays as the form value; value,
+   options, disabled and aria-invalid keep working, so existing form code doesn't change. */
+function enhanceSelectField(sel, label) {
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const icon = id => `<svg class="i" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+  const root = document.createElement("div");
+  root.className = "dd";
+  root.innerHTML = `<button type="button" class="dd__btn" aria-haspopup="listbox" aria-expanded="false"><span class="dd__value"></span>${icon("chevron-down")}</button><div class="menu dd__menu" role="listbox" hidden></div>`;
+  sel.after(root); sel.hidden = true; sel.tabIndex = -1;
+  const btn = root.querySelector(".dd__btn"), menu = root.querySelector(".dd__menu"), valueEl = root.querySelector(".dd__value");
+  const vd = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value"), dd = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "disabled");
+  const get = () => vd.get.call(sel);
+  menu.setAttribute("aria-label", label);
+  const sync = () => {
+    const o = sel.selectedOptions[0], filled = !!get() && !!o;
+    valueEl.textContent = o ? o.textContent : "";
+    root.classList.toggle("is-filled", filled);
+    btn.disabled = dd.get.call(sel);
+    btn.setAttribute("aria-label", `${label}: ${filled ? o.textContent : "none selected"}`);
+    btn.classList.toggle("is-invalid", sel.getAttribute("aria-invalid") === "true");
+  };
+  Object.defineProperty(sel, "value", { get, set(v) { vd.set.call(this, v); sync(); }, configurable: true });
+  Object.defineProperty(sel, "disabled", { get() { return dd.get.call(this); }, set(v) { dd.set.call(this, v); sync(); }, configurable: true });
+  new MutationObserver(sync).observe(sel, { childList: true, attributes: true, attributeFilter: ["aria-invalid"] });
+  const close = refocus => { menu.hidden = true; root.classList.remove("is-open"); btn.setAttribute("aria-expanded", "false"); if (refocus) btn.focus(); };
+  const open = () => {
+    document.querySelectorAll(".dd.is-open").forEach(d => d !== root && d.querySelector(".dd__btn").dispatchEvent(new Event("dd-close")));
+    const cur = get();
+    menu.innerHTML = [...sel.options].map(o => `<button type="button" class="menu__opt" role="option" tabindex="-1" data-v="${esc(o.value)}" aria-selected="${o.value === cur}"><span>${esc(o.textContent)}</span>${icon("check").replace('class="i"', 'class="i tick"')}</button>`).join("");
+    menu.hidden = false; root.classList.add("is-open"); btn.setAttribute("aria-expanded", "true");
+    menu.classList.toggle("is-up", window.innerHeight - btn.getBoundingClientRect().bottom < menu.offsetHeight + 12);
+    (menu.querySelector('[aria-selected="true"]') || menu.querySelector(".menu__opt"))?.focus();
+  };
+  btn.addEventListener("dd-close", () => close(false));
+  btn.addEventListener("click", () => menu.hidden ? open() : close(true));
+  btn.addEventListener("keydown", e => { if (menu.hidden && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); open(); } });
+  menu.addEventListener("click", e => {
+    const o = e.target.closest(".menu__opt"); if (!o) return;
+    vd.set.call(sel, o.dataset.v); sel.removeAttribute("aria-invalid"); sync(); close(true);
+    sel.dispatchEvent(new Event("input", { bubbles: true })); sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  menu.addEventListener("keydown", e => {
+    const opts = [...menu.querySelectorAll(".menu__opt")], i = opts.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") opts[Math.min(i + 1, opts.length - 1)].focus();
+    else if (e.key === "ArrowUp") opts[Math.max(i - 1, 0)].focus();
+    else if (e.key === "Home") opts[0].focus();
+    else if (e.key === "End") opts.at(-1).focus();
+    else if (e.key === "Escape") { e.stopPropagation(); close(true); }
+    else if (e.key === "Tab") close(false);
+    else return;
+    if (e.key !== "Tab") e.preventDefault();
+  });
+  document.addEventListener("pointerdown", e => { if (!menu.hidden && !root.contains(e.target)) close(false); });
+  sync();
 }

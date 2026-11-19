@@ -300,14 +300,14 @@ button.who:hover { border-color: var(--hover-support); }
 .cselect__btn {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; height: 36px; padding: 8px;
   border: 1px solid var(--surface-250); border-radius: var(--radius); background: var(--surface); color: var(--ink);
-  font-weight: 300; line-height: 18px; text-align: left; cursor: pointer; transition: border-color .15s;
+  font-size: 14px; font-weight: 300; line-height: 18px; text-align: left; cursor: pointer; transition: border-color .15s;
 }
 .cselect__btn::after { content: ""; flex: none; width: 16px; height: 16px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23070717' stroke-width='1.5'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E") center / 16px no-repeat; transition: transform .15s; }
 .cselect__btn[aria-expanded="true"]::after { transform: rotate(180deg); }
 .cselect__btn > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cselect__btn .is-placeholder { color: var(--ink-subtle); }
 .cselect__btn:hover { border-color: var(--hover-support); }
-.cselect__btn:focus-visible, .cselect__btn[aria-expanded="true"] { outline: 0; border-color: var(--primary-100); box-shadow: var(--focus-ring); }
+.cselect__btn:focus-visible, .cselect__btn[aria-expanded="true"] { outline: 0; border-color: var(--primary-100); box-shadow: none; }
 .cselect__btn:disabled { background: var(--disabled); color: var(--ink-subtle); border-color: var(--disabled); cursor: default; }
 .menu__foot button:disabled { color: var(--ink-subtle); cursor: default; background: none; }
 .cselect .menu { max-height: 260px; }

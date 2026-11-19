@@ -37,7 +37,7 @@ window.JibbleTimeOff = (() => {
 
   /* allowance: days per calendar year, null = not capped. Colours reuse the Activities & Projects set. */
   const POLICIES = [
-    { id: "vacation", name: "Vacation Leave", short: "Vacation", color: "var(--ap-blue)", allowance: 20, paid: true },
+    { id: "vacation", name: "Vacation Leave", short: "Vacation", color: "var(--ap-blue)", allowance: 20, carryover: 5, paid: true },
     { id: "sick", name: "Sick Leave", short: "Sick", color: "var(--ap-red)", allowance: 10, paid: true },
     { id: "personal", name: "Personal Leave", short: "Personal", color: "var(--ap-purple)", allowance: 3, paid: true },
     { id: "parental", name: "Parental Leave", short: "Parental", color: "var(--ap-turquoise)", allowance: null, paid: true },
@@ -125,12 +125,12 @@ window.JibbleTimeOff = (() => {
   }
 
   // ---------- Persistence ----------
-  let requests;
-  try { const s = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(s?.requests)) { requests = s.requests; seq = s.seq || requests.length + 1; } } catch { /* storage unavailable */ }
+  let requests, amendments = [];
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (Array.isArray(s?.requests)) { requests = s.requests; seq = s.seq || requests.length + 1; } if (Array.isArray(s?.amendments)) amendments = s.amendments; } catch { /* storage unavailable */ }
   if (!requests) requests = seed();
   const subs = new Set();
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify({ requests, seq })); } catch { /* storage unavailable: changes last until reload */ }
+    try { localStorage.setItem(KEY, JSON.stringify({ requests, seq, amendments })); } catch { /* storage unavailable: changes last until reload */ }
     subs.forEach(fn => fn());
   }
 
@@ -145,10 +145,10 @@ window.JibbleTimeOff = (() => {
   }
 
   /* Balance for one member and policy in a calendar year. Taken = approved days up to today,
-     planned = approved days after today, pending = days waiting on a decision. */
-  function balance(m, policyId, year = TODAY.slice(0, 4), ignoreId) {
-    const p = policyById(policyId);
-    const out = { allowance: p.allowance, taken: 0, planned: 0, pending: 0 };
+     planned = approved days after today, pending = days waiting on a decision.
+     carryover = unused days brought from last year (capped by the policy), amend = manual adjustments. */
+  function usage(m, policyId, year, ignoreId) {
+    const out = { taken: 0, planned: 0, pending: 0 };
     for (const r of requests) {
       if (r.m !== m || r.policy !== policyId || r.id === ignoreId || !active(r)) continue;
       for (const k of eachDay(r.from, r.to)) {
@@ -159,9 +159,26 @@ window.JibbleTimeOff = (() => {
         else out.planned += v;
       }
     }
-    out.available = p.allowance == null ? null : p.allowance - out.taken - out.planned;
     return out;
   }
+  const amendTotal = (m, policyId, year) => amendments.filter(a => a.m === m && a.policy === policyId && a.year === String(year)).reduce((t, a) => t + a.days, 0);
+  function balance(m, policyId, year = TODAY.slice(0, 4), ignoreId) {
+    const p = policyById(policyId); year = String(year);
+    const out = { allowance: p.allowance, ...usage(m, policyId, year, ignoreId), amend: amendTotal(m, policyId, year), carryover: 0 };
+    if (p.allowance != null && p.carryover) {
+      const py = String(+year - 1), u = usage(m, policyId, py);
+      const left = p.allowance + amendTotal(m, policyId, py) - u.taken - u.planned;
+      out.carryover = Math.max(0, Math.min(p.carryover, left));
+    }
+    out.entitled = p.allowance == null ? null : p.allowance + out.carryover + out.amend;
+    out.available = p.allowance == null ? null : out.entitled - out.taken - out.planned;
+    return out;
+  }
+  function amend(m, policyId, year, days, note) {
+    amendments.push({ id: "a" + Date.now(), m, policy: policyId, year: String(year), days, note: note || "", at: TODAY, by: ME });
+    save();
+  }
+  const amendmentsFor = (m, policyId, year) => amendments.filter(a => a.m === m && a.policy === policyId && a.year === String(year));
 
   /* Checks a draft request. Returns { error } for problems that block saving, { warning } otherwise. */
   function validate(d, ignoreId) {
@@ -200,7 +217,7 @@ window.JibbleTimeOff = (() => {
     const [r] = requests.splice(i, 1); save(); return r;
   }
   function restore(r) { requests.push(r); save(); }
-  function reset() { requests = seed(); save(); }
+  function reset() { requests = seed(); amendments = []; save(); }
 
   // ---------- Formatting ----------
   const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -218,6 +235,7 @@ window.JibbleTimeOff = (() => {
     TODAY, ME, MEMBERS, POLICIES, HOLIDAYS,
     get requests() { return requests; },
     memberById, policyById, days, workdays, excluded, balance, validate, overlaps,
+    amend, amendmentsFor,
     add, update, remove, restore, reset, subscribe: fn => (subs.add(fn), () => subs.delete(fn)),
     key, parse, addDays, isWeekend, fmtDate, fmtRange, fmtDays,
     /* For Timesheets: approved time off as day ranges, and policy names. */

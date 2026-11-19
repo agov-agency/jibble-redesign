@@ -221,7 +221,6 @@
     const card = $(".clock");
     card.dataset.state = st;
     document.body.dataset.clock = st;
-    $("#clockStatusText").textContent = st === "in" ? "Clocked in" : st === "break" ? "On break" : "Clocked out";
     $("#activityLabel").textContent = ACTIVITIES.find(item => item.id === state.activity)?.name ?? "No activity";
     $("#projectLabel").textContent = PROJECTS.find(item => item.id === state.project)?.name ?? "No project";
     for (const selector of ["#activityBtn", "#projectBtn"]) {
@@ -230,12 +229,12 @@
     renderTimer();
 
     /* While clocked in (or on break), show what the running time is tracked against, with the side panel's chips. */
-    $("#clockStatus").hidden = st === "in";
     const now = $("#clockNow");
     const cur = st === "out" ? null : lastWork();
     const act = cur && ACTIVITIES.find(x => x.id === cur.act);
     const proj = cur && PROJECTS.find(x => x.id === cur.project && x.id !== "none");
     now.hidden = !act && !proj;
+    $("#clockSub").hidden = !now.hidden;
     const nowKey = `${act?.id}|${proj?.id}`;
     if (now.dataset.key !== nowKey) {
       now.dataset.key = nowKey;
@@ -460,7 +459,6 @@
 
   // ---------- Render: locations ----------
   function renderLocations(members) {
-    const sel = state.filters.locations;
     const scoped = MEMBERS.filter(m => (state.scope === "org" || (state.scope === "managed" ? m.managed : m.id === "me"))
       && (!state.filters.groups.size || state.filters.groups.has(m.group))
       && (!state.filters.schedules.size || state.filters.schedules.has(m.sched)));
@@ -472,10 +470,9 @@
     LOCATIONS.filter(l => l.x != null).forEach(l => {
       const [i, b] = counts(l.id);
       const tone = i ? "in" : b ? "break" : "out";
-      const p = el("button", "map__pin");
+      const p = el("span", "map__pin");
       p.dataset.tone = tone; p.dataset.loc = l.id;
       p.style.left = l.x + "%"; p.style.top = l.y + "%";
-      p.setAttribute("aria-pressed", sel.has(l.id));
       p.setAttribute("aria-label", `${l.name} on map: ${i} in, ${b} on break`);
       p.innerHTML = `<span class="map__name">${esc(l.name)}</span>`;
       map.append(p);
@@ -699,13 +696,6 @@
   $("#runBreak").addEventListener("click", () => clockAction(myStatus() === "break" ? "endbreak" : "break"));
   $("#runStop").addEventListener("click", () => clockAction("out"));
   $("#topClockBtn").addEventListener("click", () => { const st = myStatus(); clockAction(st === "in" ? "out" : st === "break" ? "endbreak" : "in"); });
-  $("#map").addEventListener("click", e => {
-    const p = e.target.closest(".map__pin"); if (!p) return;
-    const set = state.filters.locations, id = p.dataset.loc;
-    const only = set.size === 1 && set.has(id);
-    set.clear(); if (!only) set.add(id);
-    renderAll();
-  });
   $("#clearFilters").addEventListener("click", () => { Object.values(state.filters).forEach(s => s.clear()); renderAll(); });
 
   const app = $("#app"), cb = $("#collapseBtn");

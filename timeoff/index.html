@@ -50,6 +50,7 @@
     <symbol id="i-collapse" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13M13 8l-2 2 2 2"/></symbol>
     <symbol id="i-plus" viewBox="0 0 20 20"><path d="M10 4.5v11M4.5 10h11"/></symbol>
     <symbol id="i-pencil" viewBox="0 0 20 20"><path d="M12.5 4.5l3 3L7 16H4v-3z"/><path d="M11 6l3 3"/></symbol>
+    <symbol id="i-history" viewBox="0 0 20 20"><path d="M3.5 10a6.5 6.5 0 1 0 1.9-4.6L3.5 7.3"/><path d="M3.5 3.8v3.5H7M10 6.5V10l2.5 1.5"/></symbol>
     <symbol id="i-trash" viewBox="0 0 20 20"><path d="M4 6h12M8 6V4.5h4V6M5.5 6l.8 10h7.4l.8-10"/><path d="M8.5 9v4.5M11.5 9v4.5"/></symbol>
     <symbol id="i-x" viewBox="0 0 20 20"><path d="M5.5 5.5l9 9M14.5 5.5l-9 9"/></symbol>
     <symbol id="i-phone" viewBox="0 0 20 20"><rect x="6" y="3" width="8" height="14" rx="1.5"/><path d="M9 14.5h2"/></symbol>
@@ -212,22 +213,38 @@
               <button class="round-btn round-btn--outline round-btn--36" id="yearNext" aria-label="Next year"><svg class="i"><use href="#i-chevron-right"/></svg></button>
             </div>
           </div>
-          <div class="bar__group">
-            <label class="field-search">
+        </div>
+        <div class="bal-split">
+          <nav class="bal-members" aria-label="Members">
+            <label class="field-search bal-members__search">
               <svg class="i i-16"><use href="#i-search"/></svg>
               <span class="sr-only">Search members</span>
-              <input type="search" id="balSearch" placeholder="Search" autocomplete="off">
+              <input type="search" id="balSearch" placeholder="Search members" autocomplete="off">
             </label>
+            <ul class="bal-members__list" id="balMembers" role="listbox" aria-label="Choose a member"></ul>
+            <p class="bal-members__empty" id="balEmpty" hidden></p>
+          </nav>
+          <div class="bal-main">
+            <div class="bal-main__head">
+              <div class="mem" id="balWho"></div>
+              <p class="panel-note">Working days in the calendar year. Weekends and public holidays are not counted.</p>
+            </div>
+            <div class="tbl-wrap" role="region" aria-label="Leave balances" tabindex="0">
+              <table class="tbl tbl--bal" id="balTable">
+                <thead><tr>
+                  <th scope="col">Leave policy</th>
+                  <th scope="col" class="c-num"><span class="th-hint" title="Unused days brought from last year">Carryover</span></th>
+                  <th scope="col" class="c-num">Entitled</th>
+                  <th scope="col" class="c-num"><span class="th-hint" title="Manual adjustments made by an admin">Amendments</span></th>
+                  <th scope="col" class="c-num">Taken</th>
+                  <th scope="col" class="c-num"><span class="th-hint" title="Entitled + carryover + amendments − taken. Pending requests are not deducted.">Balance</span></th>
+                  <th scope="col" class="c-acts"><span class="sr-only">Actions</span></th>
+                </tr></thead>
+                <tbody id="balBody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
-        <p class="panel-note">Balances count working days in the calendar year. Weekends and public holidays are not counted. Select a balance to see its requests.</p>
-        <div class="tbl-wrap" role="region" aria-label="Leave balances" tabindex="0">
-          <table class="tbl tbl--bal" id="balTable">
-            <thead id="balHead"></thead>
-            <tbody id="balBody"></tbody>
-          </table>
-        </div>
-        <p class="grid-empty" id="balEmpty" hidden></p>
       </section>
     </main>
   </div>
@@ -242,11 +259,11 @@
     <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
   </header>
   <form class="drawer__body" id="addForm" novalidate>
-    <label class="field"><span class="field__label">Member</span><select name="m" id="fMember" required></select></label>
-    <label class="field"><span class="field__label">Policy <span class="field__aside" id="fPolicyAside"></span></span><select name="policy" id="fPolicy" required></select></label>
+    <div class="field"><span class="field__label">Member</span><select name="m" id="fMember" required></select></div>
+    <div class="field"><span class="field__label">Policy <span class="field__aside" id="fPolicyAside"></span></span><select name="policy" id="fPolicy" required></select></div>
     <div class="pair">
-      <label class="field"><span class="field__label">Start date</span><input type="date" name="from" id="fFrom" required></label>
-      <label class="field"><span class="field__label">End date <span class="field__aside">Optional</span></span><input type="date" name="to" id="fTo"></label>
+      <div class="field"><span class="field__label">Start date</span><input type="date" name="from" id="fFrom" required></div>
+      <div class="field"><span class="field__label">End date <span class="field__aside">Optional</span></span><input type="date" name="to" id="fTo"></div>
     </div>
     <div class="half-row" id="halfRow">
       <label class="check"><input type="checkbox" id="fHalf"><span class="box"><svg class="i"><use href="#i-check"/></svg></span>Half day</label>
@@ -275,6 +292,31 @@
   <footer class="drawer__foot" id="detFoot"></footer>
 </aside>
 
+<!-- Balance adjustment -->
+<aside class="drawer" id="amdDrawer" role="dialog" aria-modal="true" aria-labelledby="amdTitle" hidden>
+  <header class="drawer__head">
+    <h2 class="drawer__title" id="amdTitle">Adjust balance</h2>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
+  </header>
+  <form class="drawer__body" id="amdForm" novalidate>
+    <div class="det-bal" id="amdSummary"></div>
+    <div class="field"><span class="field__label">Adjust by</span>
+      <div class="seg seg--full" id="amdDir" role="radiogroup" aria-label="Direction">
+        <button type="button" class="seg__opt" role="radio" aria-checked="true" data-dir="1">Add days</button>
+        <button type="button" class="seg__opt" role="radio" aria-checked="false" tabindex="-1" data-dir="-1">Deduct days</button>
+      </div>
+    </div>
+    <label class="field"><span class="field__label">Days</span><input type="number" id="amdDays" min="0.5" max="365" step="0.5" value="1" required></label>
+    <label class="field"><span class="field__label">Reason <span class="field__aside">Optional</span></span><textarea id="amdNote" rows="2" maxlength="200" placeholder="For example, extra day for overtime"></textarea></label>
+    <p class="form-error" id="amdError" role="alert" hidden></p>
+    <div id="amdHistory"></div>
+  </form>
+  <footer class="drawer__foot">
+    <button class="btn btn--outlined" data-close>Cancel</button>
+    <button class="btn btn--ink" form="amdForm" type="submit">Save adjustment</button>
+  </footer>
+</aside>
+
 <!-- Day list ("+N more") -->
 <aside class="drawer" id="dayDrawer" role="dialog" aria-modal="true" aria-labelledby="dayTitle" hidden>
   <header class="drawer__head">
@@ -293,6 +335,7 @@
 <script src="../shared/menu-search.js"></script>
 <script src="../shared/date-picker.js"></script>
 <script src="../shared/clock-panel.js"></script>
+<script src="../shared/top-clock.js"></script>
 <script src="../shared/time-off-store.js"></script>
 <script src="timeoff.js"></script>
 <script src="../shared/account.js"></script>

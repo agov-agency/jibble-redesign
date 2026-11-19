@@ -124,12 +124,9 @@
             <div class="clock__top">
               <div class="clock__left">
                 <h2 class="sr-only" id="clockTitle">Your time clock</h2>
-                <div class="clock__head">
-                  <span class="status" id="clockStatus"><span class="status__dot"></span><span id="clockStatusText">Clocked out</span></span>
-                  <p class="clock__now" id="clockNow" hidden></p>
-                </div>
                 <p class="clock__timer" id="clockTimer" aria-live="off"><span id="timerHM">0:00</span><span class="clock__sec" id="timerS">:00</span></p>
                 <p class="clock__sub" id="clockSub">Last out 4 minutes ago · Today 3h 12m</p>
+                <p class="clock__now" id="clockNow" hidden></p>
               </div>
               <div class="clock__actions" id="clockActions"></div>
             </div>
@@ -161,12 +158,13 @@
           </section>
         </div>
         <div class="clock__period">
+        <h2 class="title-1 clock__period-title" id="hoursTitle">Tracked hours</h2>
+        <span class="toolbar__range" id="rangeLabel">16 – 22 Nov</span>
         <div class="seg" role="radiogroup" aria-label="Period" id="periodSeg">
           <button role="radio" class="seg__opt" aria-checked="false" data-period="day">Day</button>
           <button role="radio" class="seg__opt" aria-checked="true" data-period="week">Week</button>
           <button role="radio" class="seg__opt" aria-checked="false" data-period="month">Month</button>
         </div>
-        <span class="toolbar__range" id="rangeLabel">16 – 22 Nov</span>
         </div>
         </div>
 
@@ -193,7 +191,7 @@
         <!-- Tracked hours -->
         <section class="card widget hours" data-widget="hours" aria-labelledby="hoursTitle">
           <div class="widget__head">
-            <h2 class="title-1" id="hoursTitle">Tracked hours</h2>
+            <span></span>
             <a class="link-btn" href="../timesheets/index.html">Go to timesheets <svg class="i i-16"><use href="#i-arrow-right"/></svg></a>
           </div>
           <div id="hoursMount"></div>

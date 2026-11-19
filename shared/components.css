@@ -30,7 +30,7 @@
   background: var(--surface); color: var(--ink); cursor: text; transition: border-color .15s;
 }
 .field-search:hover { border-color: var(--hover-support); }
-.field-search:focus-within { border-color: var(--primary-100); box-shadow: var(--focus-ring); }
+.field-search:focus-within { border-color: var(--hover-support); box-shadow: none; }
 .field-search input:focus-visible { box-shadow: none; }
 .field-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; }
 .field-search input::placeholder { color: var(--ink-subtle); }
@@ -124,14 +124,13 @@
 .field__aside { color: var(--ink-muted); font-weight: 300; }
 .field input, .field select, .field textarea {
   width: 100%; min-width: 0; height: 36px; padding: 8px; border: 1px solid var(--surface-250); border-radius: var(--radius);
-  background: var(--surface); color: var(--ink); font-weight: 300; line-height: 18px; caret-color: var(--primary); font-variant-numeric: tabular-nums; transition: border-color .15s;
+  background: var(--surface); color: var(--ink); font-size: 14px; font-weight: 300; line-height: 18px; caret-color: var(--primary); font-variant-numeric: tabular-nums; transition: border-color .15s;
 }
 .field select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23070717' stroke-width='1.5'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 16px; padding-right: 32px; }
 .field input::placeholder, .field textarea::placeholder { color: var(--ink-subtle); }
-.field textarea { height: auto; padding: 8px; resize: vertical; line-height: 20px; }
+.field textarea { height: 120px; padding: 12px; resize: none; } /* same as the clock-in panel (Figma 673:523098) */
 .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--hover-support); }
-.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: 0; border-color: var(--primary-100); box-shadow: var(--focus-ring); }
-.field input:focus, .field select:focus, .field textarea:focus { outline: 0; border-color: var(--primary-100); box-shadow: var(--focus-ring); }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 0; border-color: var(--primary-100); box-shadow: none; } /* Figma Focused: Primary 100 border and orange caret only, as in the clock-in panel */
 .field select:disabled { background-color: var(--disabled); color: var(--ink-subtle); border-color: var(--disabled); cursor: default; }
 .field input[aria-invalid="true"], .field select[aria-invalid="true"] { border-color: var(--red); }
 .form-error { margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--red-tint); color: var(--red-text); font-size: 12px; line-height: 16px; }
@@ -158,3 +157,11 @@
 .btn--danger-text { padding: 0 8px; background: none; color: var(--red-text); }
 .btn--danger-text:hover { background: var(--red-tint); }
 .btn--danger-text[hidden] { display: none; }
+
+/* Drawer fields share the clock-in panel's dropdown and date field (.dd, .time-field--static); the label comes from .field__label. */
+.drawer .dd, .drawer .dp-wrap { margin-top: 0; }
+.drawer .dd__btn:disabled, .drawer .time-field--static:disabled { background: var(--disabled); border-color: var(--disabled); color: var(--ink-subtle); cursor: default; }
+.drawer .dd__btn.is-invalid, .drawer .time-field--static.is-invalid { border-color: var(--red); }
+.drawer .dd__menu { z-index: 5; }
+.drawer .pair > .field:last-child .dp { left: auto; right: 0; } /* the second column's picker opens leftwards so it stays inside the panel */
+.drawer .dd { min-width: 0; grid-template-columns: minmax(0, 1fr); }

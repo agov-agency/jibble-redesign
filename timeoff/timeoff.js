@@ -29,7 +29,7 @@
     month: { y: THIS_YEAR, m: +TODAY.slice(5, 7) - 1 },
     hidden: new Set(prefs.get("hidden", [])),
     status: "pending", when: "upcoming", pol: new Set(), q: "", member: null,
-    year: THIS_YEAR, balQ: "",
+    year: THIS_YEAR, balQ: "", balM: null,
   };
 
   // ---------- Scope ----------
@@ -139,6 +139,8 @@
       tab.setAttribute("aria-selected", on); tab.tabIndex = on ? 0 : -1;
       $("#view" + x[0].toUpperCase() + x.slice(1)).hidden = !on;
     });
+    // One toolbar row: scope switch lives at the start of the active view's first bar
+    $("#view" + state.view[0].toUpperCase() + state.view.slice(1) + " .bar__group").prepend($("#scopeSeg"));
     document.title = `Jibble - Time off · ${state.view[0].toUpperCase() + state.view.slice(1)}`;
     closeMenus(false);
     render();
@@ -293,7 +295,7 @@
         <td class="c-acts">${r.status === "pending" ? `<span class="acts-row">
           <button type="button" class="btn btn--outlined btn--sm" data-act="reject" aria-label="Reject ${esc(m.name)}’s ${esc(p.name)}">Reject</button>
           <button type="button" class="btn btn--approve btn--sm" data-act="approve" aria-label="Approve ${esc(m.name)}’s ${esc(p.name)}">${icon("check", "i i-16")}Approve</button></span>`
-          : `<button type="button" class="icon-btn" data-act="open" aria-label="Open ${esc(m.name)}’s ${esc(p.name)}">${icon("chevron-right")}</button>`}</td>
+          : `<button type="button" class="round-btn round-btn--36" data-act="open" aria-label="Open ${esc(m.name)}’s ${esc(p.name)}">${icon("chevron-right")}</button>`}</td>
       </tr>`;
     }).join("");
     const empty = $("#reqEmpty"), filtered = state.q || state.pol.size || state.member;
@@ -361,39 +363,95 @@
   });
 
   // ---------- Balances ----------
+  const num = v => String(+v.toFixed(1));
+  const signed = v => v > 0 ? "+" + num(v) : num(v);
+  const unit = v => Math.abs(v) === 1 ? "Day" : "Days";
+  function balMembers() {
+    const q = state.balQ.trim().toLowerCase();
+    return scopeMembers().filter(m => !q || m.name.toLowerCase().includes(q));
+  }
   function renderBalances() {
-    const y = String(state.year), q = state.balQ.trim().toLowerCase();
+    const y = String(state.year), members = balMembers();
     $("#yearLabel").textContent = y;
     $("#yearNext").disabled = state.year >= THIS_YEAR + 1;
-    $("#balHead").innerHTML = `<tr><th scope="col" class="c-member">Member</th>${S.POLICIES.map(p => `<th scope="col"><span class="pol"><span class="dot" style="--c:${p.color}"></span>${esc(p.name)}</span><span class="sub">${p.allowance == null ? "No limit" : `${p.allowance} days a year`}</span></th>`).join("")}</tr>`;
-    const members = scopeMembers().filter(m => !q || m.name.toLowerCase().includes(q));
-    $("#balBody").innerHTML = members.map(m => `<tr>
-      <th scope="row" class="c-member"><div class="mem">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></div></th>
-      ${S.POLICIES.map(p => {
-        const b = S.balance(m.id, p.id, y), n = v => String(v);
-        const detail = [b.taken && `${n(b.taken)} taken`, b.planned && `${n(b.planned)} planned`, b.pending && `${n(b.pending)} pending`].filter(Boolean).join(" · ") || "None used";
-        const label = `${m.name}, ${p.name} ${y}: ${p.allowance == null ? `${b.taken + b.planned} days booked` : `${b.available} of ${p.allowance} days left`}. ${detail}. Show requests`;
-        if (p.allowance == null) return `<td class="c-bal" tabindex="0" role="button" data-m="${m.id}" data-p="${p.id}" aria-label="${esc(label)}"><span class="bal__v"><b>${n(b.taken + b.planned)}</b> ${b.taken + b.planned === 1 ? "day" : "days"} booked</span><span class="sub">${esc(detail)}</span></td>`;
-        const pct = v => Math.max(0, Math.min(100, (v / p.allowance) * 100));
-        return `<td class="c-bal" tabindex="0" role="button" data-m="${m.id}" data-p="${p.id}" aria-label="${esc(label)}" style="--c:${p.color}">
-          <span class="bal__v${b.available <= Math.max(1, p.allowance * 0.1) ? " is-low" : ""}"><b>${n(b.available)}</b> of ${p.allowance} left</span>
-          <span class="bal__bar" aria-hidden="true"><i style="width:${pct(b.taken)}%"></i><i class="planned" style="width:${pct(b.planned)}%"></i><i class="pending" style="width:${pct(b.pending)}%"></i></span>
-          <span class="sub">${esc(detail)}</span></td>`;
-      }).join("")}</tr>`).join("");
+    if (!members.some(m => m.id === state.balM)) state.balM = members[0]?.id || null;
+    $("#balMembers").innerHTML = members.map(m => `<li role="option" class="bal-mem" tabindex="${m.id === state.balM ? 0 : -1}" aria-selected="${m.id === state.balM}" data-m="${m.id}">
+      <div class="mem">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></div></li>`).join("");
     $("#balEmpty").hidden = !!members.length;
-    $("#balTable").closest(".tbl-wrap").hidden = !members.length;
     $("#balEmpty").innerHTML = `<strong>No members match “${esc(state.balQ)}”</strong>Check the spelling or clear the search.`;
+    const m = S.memberById(state.balM);
+    $(".bal-main").hidden = !m;
+    if (!m) return;
+    $("#balWho").innerHTML = `${avatar(m, 40)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span>`;
+    const period = `Jan 1 – Dec 31, ${y}`;
+    $("#balBody").innerHTML = S.POLICIES.map(p => {
+      const b = S.balance(m.id, p.id, y), used = b.taken + b.planned, capped = p.allowance != null;
+      const usedSub = [b.planned && `${num(b.planned)} planned`, b.pending && `${num(b.pending)} pending`].filter(Boolean).join(" · ");
+      const balCell = capped
+        ? `<span class="bal__v${b.available < 0 ? " is-neg" : b.available <= Math.max(1, p.allowance * 0.1) ? " is-low" : ""}">${num(b.available)} ${unit(b.available)}</span>`
+        : `<span class="bal__v bal__v--none">No limit</span>`;
+      return `<tr data-p="${p.id}">
+        <th scope="row"><span class="pol"><span class="dot" style="--c:${p.color}"></span>${esc(p.name)}</span><span class="sub">${capped ? period : "Not capped"}</span></th>
+        <td class="c-num">${capped ? num(b.carryover) : "–"}</td>
+        <td class="c-num">${capped ? num(p.allowance) : "–"}</td>
+        <td class="c-num">${capped ? (b.amend ? signed(b.amend) : "0") : "–"}</td>
+        <td class="c-num">${num(used)}${usedSub ? `<span class="sub">${usedSub}</span>` : ""}</td>
+        <td class="c-num">${balCell}</td>
+        <td class="c-acts"><span class="row-acts">
+          ${capped ? `<button class="round-btn round-btn--36" data-amend aria-label="Adjust ${esc(p.name)} balance for ${esc(m.name)}" title="Adjust balance"><svg class="i i-16"><use href="#i-pencil"/></svg></button>` : ""}
+          <button class="round-btn round-btn--36" data-reqs aria-label="Show ${esc(p.name)} requests for ${esc(m.name)}" title="Show requests"><svg class="i i-16"><use href="#i-history"/></svg></button>
+        </span></td></tr>`;
+    }).join("");
   }
   $("#yearPrev").addEventListener("click", () => { state.year--; renderBalances(); });
   $("#yearNext").addEventListener("click", () => { state.year++; renderBalances(); });
   $("#balSearch").addEventListener("input", e => { state.balQ = e.target.value; renderBalances(); });
-  function openBalance(cell) {
-    state.member = cell.dataset.m; state.pol = new Set([cell.dataset.p]); state.status = "all"; state.when = state.year === THIS_YEAR ? "year" : "all";
-    state.q = ""; $("#reqSearch").value = "";
-    location.hash = "#/requests";
+  function pickBalMember(id, focus) {
+    state.balM = id; renderBalances();
+    if (focus) $(`#balMembers [data-m="${id}"]`)?.focus();
   }
-  $("#balBody").addEventListener("click", e => { const c = e.target.closest(".c-bal"); if (c) openBalance(c); });
-  $("#balBody").addEventListener("keydown", e => { const c = e.target.closest(".c-bal"); if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openBalance(c); } });
+  $("#balMembers").addEventListener("click", e => { const li = e.target.closest(".bal-mem"); if (li) pickBalMember(li.dataset.m); });
+  $("#balMembers").addEventListener("keydown", e => {
+    const items = $$(".bal-mem", $("#balMembers")), i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    const go = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: items.length - 1 }[e.key];
+    if (go != null) { e.preventDefault(); const t = items[Math.max(0, Math.min(items.length - 1, go))]; pickBalMember(t.dataset.m, true); }
+  });
+  $("#balBody").addEventListener("click", e => {
+    const tr = e.target.closest("tr[data-p]"); if (!tr) return;
+    if (e.target.closest("[data-amend]")) openAmend(tr.dataset.p);
+    else if (e.target.closest("[data-reqs]")) {
+      state.member = state.balM; state.pol = new Set([tr.dataset.p]); state.status = "all"; state.when = state.year === THIS_YEAR ? "year" : "all";
+      state.q = ""; $("#reqSearch").value = "";
+      location.hash = "#/requests";
+    }
+  });
+
+  // Adjust balance drawer
+  let amd = null;
+  function renderAmend() {
+    const { m, p, y } = amd, b = S.balance(m.id, p.id, y), list = S.amendmentsFor(m.id, p.id, y);
+    $("#amdTitle").textContent = `Adjust ${p.name}`;
+    $("#amdSummary").innerHTML = `<strong>${esc(m.name)}</strong> · ${y}<br>${num(b.available)} of ${num(b.entitled)} ${b.entitled === 1 ? "day" : "days"} left (${num(p.allowance)} entitled${b.carryover ? `, ${num(b.carryover)} carried over` : ""}${b.amend ? `, ${signed(b.amend)} adjusted` : ""})`;
+    $("#amdHistory").innerHTML = list.length ? `<h3 class="amd-sub">Adjustments in ${y}</h3><ul class="amd-list">${list.slice().reverse().map(a => `<li><b class="${a.days < 0 ? "is-neg" : ""}">${signed(a.days)} ${unit(a.days).toLowerCase()}</b><span>${esc(a.note || "No reason given")}</span><span class="sub">${S.fmtDate(a.at)} by ${esc(S.memberById(a.by)?.name || "Admin")}</span></li>`).join("")}</ul>` : "";
+  }
+  function openAmend(pid) {
+    amd = { m: S.memberById(state.balM), p: S.policyById(pid), y: String(state.year) };
+    $("#amdDays").value = 1; $("#amdNote").value = ""; $("#amdError").hidden = true;
+    setRadio($("#amdDir"), ".seg__opt", x => x.dataset.dir === "1");
+    renderAmend();
+    showDrawer($("#amdDrawer"), "#amdDays");
+  }
+  roving($("#amdDir"), ".seg__opt", () => {});
+  $("#amdForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const v = parseFloat($("#amdDays").value);
+    if (!(v > 0) || v > 365 || (v * 2) % 1) { $("#amdError").textContent = "Enter a number of days from 0.5 to 365, in half days."; $("#amdError").hidden = false; $("#amdDays").focus(); return; }
+    const dir = +$("#amdDir [aria-checked='true']").dataset.dir, d = v * dir;
+    S.amend(amd.m.id, amd.p.id, amd.y, d, $("#amdNote").value.trim());
+    hideDrawer();
+    toast(`${num(v)} ${unit(v).toLowerCase()} ${d > 0 ? "added to" : "deducted from"} ${amd.m.name}’s ${amd.p.name}.`);
+  });
 
   // ---------- Scope ----------
   setRadio($("#scopeSeg"), ".seg__opt", x => x.dataset.scope === state.scope);
@@ -415,7 +473,7 @@
     let bal = "";
     if (p.allowance != null && (r.status === "pending" || r.status === "approved")) {
       const y = r.from.slice(0, 4), b = S.balance(r.m, r.policy, y, r.id), after = b.available - S.workdays(r.from, r.to, r.half, y);
-      bal = `<p class="det-bal">${r.status === "pending" ? "If approved, " : ""}${esc(m.name.split(" ")[0])} ${r.status === "pending" ? "will have" : "has"} <strong>${after}</strong> of ${p.allowance} ${esc(p.short.toLowerCase())} days left in ${y}.${after < 0 ? " That is over the allowance." : ""}</p>`;
+      bal = `<p class="det-bal">${r.status === "pending" ? "If approved, " : ""}${esc(m.name.split(" ")[0])} ${r.status === "pending" ? "will have" : "has"} <strong>${after}</strong> of ${b.entitled} ${esc(p.short.toLowerCase())} days left in ${y}.${after < 0 ? " That is over the allowance." : ""}</p>`;
     }
     $("#detBody").innerHTML = `
       <div class="det-head">${avatar(m, 40)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></div>
@@ -457,6 +515,8 @@
 
   // ---------- Add / edit drawer ----------
   const F = { m: $("#fMember"), policy: $("#fPolicy"), from: $("#fFrom"), to: $("#fTo"), half: $("#fHalf"), note: $("#fNote") };
+  enhanceDateInput(F.from, "Start date"); enhanceDateInput(F.to, "End date");
+  enhanceSelectField(F.m, "Member"); enhanceSelectField(F.policy, "Policy");
   let editId = null, halfWhich = "am";
   function openAdd({ date, editId: id } = {}) {
     editId = id || null;
@@ -495,7 +555,7 @@
     const p = d.policy && S.policyById(d.policy), y = (d.from || TODAY).slice(0, 4);
     if (p && d.m) {
       const b = S.balance(d.m, d.policy, y, editId);
-      $("#fPolicyAside").textContent = p.allowance == null ? `No limit · ${b.taken + b.planned} booked in ${y}` : `${b.available} of ${p.allowance} days left in ${y}`;
+      $("#fPolicyAside").textContent = p.allowance == null ? `No limit · ${b.taken + b.planned} booked in ${y}` : `${b.available} of ${b.entitled} days left in ${y}`;
     } else $("#fPolicyAside").textContent = "";
     // Live summary
     const sum = $("#fSummary");
@@ -506,7 +566,7 @@
     sum.classList.toggle("is-warn", !!v.error);
     if (v.error) { sum.innerHTML = `<strong>Can’t book this yet</strong><span class="sub">${esc(v.error)}</span>`; return; }
     let after = "";
-    if (p.allowance != null) { const b = S.balance(d.m, d.policy, y, editId); after = ` · ${b.available - S.workdays(d.from, d.to || d.from, d.half, y)} of ${p.allowance} left after this`; }
+    if (p.allowance != null) { const b = S.balance(d.m, d.policy, y, editId); after = ` · ${b.available - S.workdays(d.from, d.to || d.from, d.half, y)} of ${b.entitled} left after this`; }
     sum.innerHTML = `<strong>${esc(S.fmtDays(v.days))} of ${esc(p.name)}</strong><span class="sub">${esc(S.fmtRange(d.from, d.to || d.from))}${exTxt ? ` · not counting ${esc(exTxt)}` : ""}${esc(after)}</span>`;
   }
   ["change", "input"].forEach(t => $("#addForm").addEventListener(t, e => { if (e.target !== F.note) { e.target.removeAttribute("aria-invalid"); $("#addError").hidden = true; syncAdd(); } }));

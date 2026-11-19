@@ -339,12 +339,12 @@
       <p class="fs__hint" id="exFilters"></p>
     </fieldset>
     <div class="pair">
-      <label class="field"><span class="field__label">Time format</span>
+      <div class="field"><span class="field__label">Time format</span>
         <select name="timeFmt"><option value="12">12-hour h:mm am/pm · 1:30 pm</option><option value="24">24-hour HH:mm · 13:30</option></select>
-      </label>
-      <label class="field"><span class="field__label">Duration format</span>
+      </div>
+      <div class="field"><span class="field__label">Duration format</span>
         <select name="durFmt"><option value="hms">h:mm:ss · 7:50:40</option><option value="hm">h:mm · 7:50</option><option value="dec">Decimal · 7.84</option></select>
-      </label>
+      </div>
     </div>
   </form>
   <footer class="drawer__foot">
@@ -373,13 +373,13 @@
     <div class="pair">
       <label class="field" id="timeField"><span class="field__label">Time <span class="field__aside" id="entryTz"></span></span><input type="time" name="time" required></label>
       <label class="field" id="durField" hidden><span class="field__label">Duration</span><input type="text" name="dur" inputmode="numeric" placeholder="h:mm" pattern="\d{1,2}:\d{2}"></label>
-      <label class="field"><span class="field__label">Date</span><input type="date" name="date" required></label>
+      <div class="field"><span class="field__label">Date</span><input type="date" name="date" required></div>
     </div>
     <div class="field" data-for="in hours"><span class="field__label">Location</span><select name="loc" data-combo="location"></select></div>
     <div class="field" data-for="in hours"><span class="field__label">Activity</span><select name="act" data-combo="activity"></select></div>
     <div class="pair" data-for="in hours">
       <div class="field"><span class="field__label">Project</span><select name="proj" data-combo="project"></select></div>
-      <label class="field"><span class="field__label">Task</span><select name="task" disabled></select></label>
+      <div class="field"><span class="field__label">Task</span><select name="task" disabled></select></div>
     </div>
     <label class="field"><span class="field__label">Note</span><textarea name="note" rows="3" maxlength="300" placeholder="Add a note"></textarea></label>
     <p class="form-error" id="entryError" role="alert" hidden></p>

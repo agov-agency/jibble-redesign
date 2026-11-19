@@ -1,9 +1,34 @@
-import { resolve } from "node:path";
+import { copyFileSync, mkdirSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+// Classic (non-module) <script src> tags are not bundled by Vite, so copy them to dist as-is.
+const CLASSIC_SCRIPTS = [
+  "shared/account.js",
+  "shared/clock-panel.js",
+  "shared/date-picker.js",
+  "shared/menu-search.js",
+  "shared/time-off-store.js",
+  "shared/topbar.js",
+  "dashboard/dashboard.js",
+  "timeoff/timeoff.js",
+  "timesheets/timesheets.js",
+];
+const copyClassicScripts = () => ({
+  name: "copy-classic-scripts",
+  apply: "build",
+  closeBundle() {
+    for (const file of CLASSIC_SCRIPTS) {
+      const to = resolve(import.meta.dirname, "dist", file);
+      mkdirSync(dirname(to), { recursive: true });
+      copyFileSync(resolve(import.meta.dirname, file), to);
+    }
+  },
+});
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), copyClassicScripts()],
   server: { open: "/dashboard/" },
   build: {
     rollupOptions: {

@@ -1,0 +1,34 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "vite",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/agovagency/Documents/jibble-redesign && PATH=\"$HOME/.local/node/bin:$PATH\" exec npx vite --port 5180 --strictPort"
+      ],
+      "port": 5180,
+      "autoPort": false
+    },
+    {
+      "name": "static",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/agovagency/Documents/jibble-redesign && exec python3 -m http.server 5174"
+      ],
+      "port": 5174
+    },
+    {
+      "name": "vite-alt",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd /Users/agovagency/Documents/jibble-redesign && PATH=\"$HOME/.local/node/bin:$PATH\" exec npx vite --port 5187 --strictPort --open false"
+      ],
+      "port": 5187,
+      "autoPort": false
+    }
+  ]
+}

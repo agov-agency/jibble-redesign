@@ -1,0 +1,149 @@
+/* Time off — Calendar, Requests and Balances. Shell from shared/shell.css, components from shared/components.css. */
+
+.topbar__left { display: flex; align-items: center; min-width: 0; }
+.tabs__tab .count-pill { height: 18px; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 9px; font-size: 11px; line-height: 18px; }
+.count-pill--warn { background: var(--yellow-tint); color: var(--yellow-text); }
+
+.month-title { margin: 0; min-width: 150px; text-align: center; font-size: 16px; line-height: 20px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.seg__n { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.seg__opt[aria-checked="true"] .seg__n { color: var(--ink-650); }
+
+/* Policy dot, used in chips, legend, table and drawer */
+.dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--c, var(--ink-subtle)); }
+.menu--legend { min-width: 220px; }
+.menu--legend .menu__opt .dot { margin-left: 2px; }
+.menu--legend .menu__meta { margin-left: auto; font-size: 12px; color: var(--ink-muted); }
+.menu--legend .menu__foot { display: flex; justify-content: space-between; padding: 8px 12px 6px; border-top: 1px solid var(--surface-250); margin-top: 4px; }
+
+.filter__btn--chip { background: var(--surface-150); }
+
+/* ---------- Month calendar ---------- */
+.cal {
+  margin-top: 16px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--surface-250); border-left: 1px solid var(--surface-250);
+}
+.cal__dow { padding: 10px 8px; font-size: 12px; line-height: 16px; color: var(--ink-650); text-align: left; border-right: 1px solid var(--surface-250); border-bottom: 1px solid var(--surface-250); }
+.cal__day {
+  position: relative; min-height: 128px; padding: 8px 6px 6px; display: flex; flex-direction: column; gap: 3px; min-width: 0;
+  border-right: 1px solid var(--surface-250); border-bottom: 1px solid var(--surface-250); background: var(--surface);
+}
+.cal__day.is-weekend { background: var(--surface-100); }
+.cal__day.is-out .cal__num { color: var(--ink-subtle); }
+.cal__day.is-out .ev, .cal__day.is-out .cal__hol { opacity: .55; }
+.cal__top { display: flex; align-items: center; gap: 6px; min-height: 24px; padding: 0 2px 2px; }
+.cal__num { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border-radius: 12px; font-size: 13px; line-height: 16px; color: var(--ink-750); font-variant-numeric: tabular-nums; }
+.cal__day.is-today .cal__num { background: var(--primary); color: var(--surface); }
+.cal__hol { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 14px; color: var(--ink-650); }
+.cal__add {
+  position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--ink-650); background: var(--surface); border: 1px solid var(--surface-250);
+  opacity: 0; transition: opacity .12s, border-color .12s, color .12s;
+}
+.cal__add .i { width: 14px; height: 14px; }
+.cal__day:hover .cal__add, .cal__add:focus-visible { opacity: 1; }
+.cal__add:hover { border-color: var(--hover-support); color: var(--ink); }
+
+/* Leave chip in a day cell */
+.ev {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-width: 0; height: 22px; padding: 0 6px;
+  border-radius: var(--radius); font-size: 12px; line-height: 16px; text-align: left; color: var(--ink-750);
+  background: color-mix(in srgb, var(--c) 10%, var(--surface)); transition: background-color .12s;
+}
+.ev:hover { background: color-mix(in srgb, var(--c) 18%, var(--surface)); color: var(--ink); }
+.ev__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ev__half { margin-left: auto; font-size: 11px; color: var(--ink-muted); }
+/* Pending: outlined instead of filled, so it reads as "not settled yet" */
+.ev--pending { background: var(--surface); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, var(--surface)); }
+.ev--pending .dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--c); }
+.ev--pending:hover { background: color-mix(in srgb, var(--c) 8%, var(--surface)); }
+.cal__more { align-self: flex-start; padding: 2px 6px; border-radius: var(--radius); font-size: 12px; line-height: 16px; color: var(--ink-650); }
+.cal__more:hover { background: var(--surface-200); color: var(--ink); }
+
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12px; line-height: 16px; color: var(--ink-650); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend .ev { width: auto; height: 18px; pointer-events: none; }
+
+/* ---------- Tables ---------- */
+.tbl-wrap { margin: 16px calc(-1 * var(--pad)) 0; overflow-x: auto; }
+.tbl-wrap:focus-visible { box-shadow: inset 0 0 0 2px var(--primary); }
+.tbl { width: 100%; min-width: 900px; border-collapse: separate; border-spacing: 0; }
+.tbl th, .tbl td { padding: 0 12px; height: 64px; border-bottom: 1px solid var(--surface-250); text-align: left; vertical-align: middle; background: var(--surface); }
+.tbl thead th { height: 44px; font-weight: 400; color: var(--ink-650); white-space: nowrap; }
+.tbl th:first-child, .tbl td:first-child { padding-left: var(--pad); }
+.tbl th:last-child, .tbl td:last-child { padding-right: var(--pad); }
+.tbl tbody tr { cursor: pointer; }
+.tbl tbody tr:hover td { background: var(--surface-100); }
+.tbl td, .tbl th { white-space: nowrap; }
+.tbl .c-num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl .c-acts { width: 1%; white-space: nowrap; text-align: right; }
+.tbl .sub { display: block; font-size: 12px; line-height: 16px; font-weight: 300; color: var(--ink-muted); }
+.tbl .note { display: block; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mem { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mem__text { min-width: 0; }
+.mem__name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mem__role { display: block; font-size: 12px; line-height: 16px; font-weight: 300; color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pol { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+
+/* Request status */
+.tag--pending { background: var(--yellow-tint); color: var(--yellow-text); }
+.tag--approved { background: var(--green-tint); color: var(--green-text); }
+.tag--rejected { background: var(--red-tint); color: var(--red-text); }
+.tag--cancelled { background: var(--surface-200); color: var(--ink-650); }
+
+.acts-row { display: inline-flex; gap: 8px; }
+.btn--sm { height: 32px; padding: 0 12px; font-size: 13px; }
+.btn--approve { background: var(--green); color: var(--surface); }
+.btn--approve:hover { background: var(--green-hover); }
+.btn--danger { color: var(--red-text); }
+.btn--danger:hover { border-color: var(--red); }
+
+/* Balances */
+.tbl--bal td, .tbl--bal th { min-width: 150px; }
+.tbl--bal th.c-member, .tbl--bal td.c-member { min-width: 240px; }
+.tbl--bal td.c-bal { cursor: pointer; }
+.tbl--bal tbody tr { cursor: default; }
+.tbl--bal tbody tr:hover td { background: var(--surface); }
+.tbl--bal td.c-bal:hover { background: var(--surface-100); }
+.bal__v { font-variant-numeric: tabular-nums; }
+.bal__v b { font-weight: 400; font-size: 16px; }
+.bal__v.is-low b { color: var(--red-text); }
+.bal__bar { position: relative; display: flex; height: 4px; margin: 6px 0 4px; border-radius: 2px; background: var(--surface-200); overflow: hidden; max-width: 140px; }
+.bal__bar i { height: 100%; background: var(--c); }
+.bal__bar i.planned { opacity: .45; }
+.bal__bar i.pending { background: repeating-linear-gradient(135deg, var(--c) 0 2px, transparent 2px 4px); opacity: .6; }
+
+/* ---------- Drawers ---------- */
+.half-row { display: flex; align-items: center; gap: 16px; min-height: 36px; flex-wrap: wrap; }
+.summary { padding: 12px; border-radius: var(--radius); background: var(--surface-150); font-size: 13px; line-height: 18px; color: var(--ink-750); }
+.summary strong { display: block; font-weight: 400; font-size: 14px; color: var(--ink); }
+.summary .sub { display: block; margin-top: 2px; font-size: 12px; line-height: 16px; font-weight: 300; color: var(--ink-650); }
+.summary.is-warn { background: var(--yellow-tint); }
+
+.det-head { display: flex; align-items: center; gap: 12px; padding-bottom: 4px; }
+.det-head .mem__name { font-size: 16px; line-height: 20px; }
+.kv-list { margin: 0; display: grid; grid-template-columns: 120px 1fr; gap: 12px 16px; }
+.kv-list dt { color: var(--ink-650); font-weight: 300; }
+.kv-list dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.det-bal { padding: 12px; border-radius: var(--radius); background: var(--surface-150); font-size: 13px; line-height: 18px; color: var(--ink-750); }
+.drawer__foot .spacer { flex: 1; }
+
+.day-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.day-list .ev { height: 44px; padding: 0 12px; font-size: 14px; }
+.day-list .ev__meta { margin-left: auto; font-size: 12px; color: var(--ink-650); white-space: nowrap; }
+.day-hol { margin: 0; padding: 10px 12px; border-radius: var(--radius); background: var(--surface-150); font-size: 13px; }
+
+/* ---------- Narrow ---------- */
+@container content (max-width: 760px) {
+  .cal__day { min-height: 76px; padding: 4px 3px; }
+  .ev { height: 8px; padding: 0; border-radius: 4px; background: var(--c); }
+  .ev--pending { background: var(--surface); }
+  .ev .dot, .ev__name, .ev__half { display: none; }
+  .cal__hol { display: none; }
+  .cal__day.is-hol .cal__num { box-shadow: inset 0 0 0 1px var(--border-450); }
+  .cal__add { display: none; }
+  .cal__dow { padding: 8px 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cal__add, .ev { transition: none; }
+}

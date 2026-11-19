@@ -1,0 +1,93 @@
+/* Jibble web app tokens. Values from DESIGN.md (Figma concept variables). */
+:root {
+  --primary: #FC6300;
+  --primary-350: #FDA66D;
+  --primary-100: #FEE8D9;
+  --primary-25: #FFF9F6;
+  --primary-text: #C24C00; /* deeper Jibble Orange for text and small fills on white (4.5:1+) */
+
+  --ink: #070717;
+  --ink-825: #161628;
+  --ink-750: #2C2C39;
+  --ink-650: #4B4B53;
+  --ink-muted: #707074;
+  --ink-subtle: #949495;
+  --ink-hover: #1D1D2E;
+
+  --surface: #FFFFFF;
+  --surface-100: #FAFAFA;
+  --surface-150: #F7F7F6;
+  --surface-200: #F2F2F1;
+  --surface-250: #EDEDEB;
+  --border-450: #CBCBC7;
+  --hover-key: #B0B0B0;
+  --hover-support: #DADAD8;
+  --pressed-support: #BEBEBB; /* Figma: Support Pressed 250 */
+  --disabled: #E5E5E5;
+
+  --green: #16A713;
+  --green-tint: #EBF7EB;
+  --red: #E50041;
+  --red-tint: #FDEEF2;
+  --yellow: #FDA300;
+  --yellow-tint: #FFF8EB;
+  /* Text-safe darker steps for status labels on tints (new, derived for contrast). */
+  --green-text: #0E7A0C;
+  --yellow-text: #9A5F00;
+  --red-text: #C20037;
+  /* Hover steps for filled status buttons (new, derived). */
+  --green-hover: #12920F;
+  --red-hover: #C8003A;
+  /* Text on the Deep Ink panel (new, derived). */
+  --on-dark: #FFFFFF;
+  --on-dark-2: #C9C9CF;
+  --on-dark-3: #A3A3AD;
+  --on-dark-muted: #B8B8C0;
+  --ap-none: #5A5A66;
+
+  --ap-violet: #C102D2;
+  --ap-pink: #CD2978;
+  --ap-red: #D43D2C;
+  --ap-orange: #DF6705;
+  --ap-green: #058502;
+  --ap-turquoise: #02977C;
+  --ap-blue: #135EBF;
+  --ap-purple: #7F2AD4;
+
+  --radius: 4px;
+  --radius-card: 12px; /* read from concept screenshots, not a bound variable */
+  --radius-pill: 999px;
+  --shadow-dropdown: 0 0 3px #0000000D, 0 8px 24px #0000000A;
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--primary);
+
+  --font: "PolySans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tracking: -0.01em;
+
+  --sidebar-w: 232px;
+  --topbar-h: 60px;
+  --pad: 24px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: var(--tracking);
+  font-feature-settings: "tnum" 1, "cv11" 1;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--primary-100); color: var(--ink); }
+button, input, select, textarea { font: inherit; letter-spacing: inherit; color: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+svg.i { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+svg.i-16 { width: 16px; height: 16px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--hover-support) transparent; }

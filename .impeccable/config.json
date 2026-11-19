@@ -1,0 +1,28 @@
+{
+  "hook": {
+    "enabled": true,
+    "limits": {
+      "maxFindings": 5,
+      "maxChars": 8000
+    }
+  },
+  "buildPath": "code",
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "polysans",
+        "createdAt": "2026-11-18T12:46:29.522Z",
+        "reason": "Claude: DESIGN.md typography declares fontFamily 'PolySans Neutral'; the token stack name 'PolySans' is the same family"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "inter",
+        "createdAt": "2026-11-18T15:07:14.626Z",
+        "reason": "DESIGN.md line 489: Inter is the documented stand-in for PolySans until webfont licensing is resolved (open question 2)"
+      }
+    ]
+  }
+}

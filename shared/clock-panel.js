@@ -19,11 +19,15 @@ function createClockPanel(activities, projects, locations, onSave) {
         <span class="clock-member__chips"><span class="clock-member__chip" title="Clocking from">GMT−5</span><span class="clock-member__chip" title="Split time">12:00</span></span>
       </span>
     </div>
+    <div class="seg seg--full" role="radiogroup" aria-label="Entry kind" id="clockKind">
+      <button type="button" role="radio" class="seg__opt" data-kind="time" aria-checked="true">Time entry</button>
+      <button type="button" role="radio" class="seg__opt" data-kind="hours" aria-checked="false" tabindex="-1">Hour entry</button>
+    </div>
     <div class="clock-dialog__row">
     <div class="dp-wrap">
       <button type="button" class="time-field time-field--static" id="clockDate" aria-label="Date"><span>Today</span><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg></button>
     </div>
-    <div class="tf">
+    <div class="tf" id="clockTimeWrap">
       <label class="tf__label" for="clockEntryTime">Time · Today</label>
       <span class="time-field">
         <input id="clockEntryTime" type="text" role="combobox" aria-expanded="false" aria-controls="clockTimeList" aria-describedby="clockTimeMsg" autocomplete="off" spellcheck="false" placeholder="h:mm" required>
@@ -32,6 +36,11 @@ function createClockPanel(activities, projects, locations, onSave) {
       </span>
       <div class="menu dd__menu tf__menu" id="clockTimeList" role="listbox" aria-label="Times" hidden></div>
       <span class="tf__msg" id="clockTimeMsg" aria-live="polite"></span>
+    </div>
+    <div class="tf" id="clockDurWrap" hidden>
+      <label class="tf__label" for="clockDur">Duration</label>
+      <input id="clockDur" type="text" inputmode="numeric" autocomplete="off" placeholder="hh:mm" maxlength="5" pattern="\\d{1,2}:\\d{2}" aria-describedby="clockDurMsg">
+      <span class="tf__msg" id="clockDurMsg" aria-live="polite"></span>
     </div>
     </div>
     <div id="clockWorkFields">
@@ -42,7 +51,6 @@ function createClockPanel(activities, projects, locations, onSave) {
     <textarea id="clockNote" placeholder="Add a note" aria-label="Note (optional)"></textarea>
     </div>
     <div class="clock-dialog__actions">
-      <button type="button" class="btn clock-dialog__manual" id="clockManual">${svg("M8 3v10M3 8h10")}Add hours</button>
       <button type="button" class="btn btn--outlined" id="clockCancel">Cancel</button>
       <button type="submit" class="btn btn--ink">Confirm</button>
     </div>
@@ -83,26 +91,57 @@ function createClockPanel(activities, projects, locations, onSave) {
     downOutside = false;
   });
   field("clockCancel").onclick = field("clockClose").onclick = closePanel;
-  /* A page can listen for this event to open its hour-entry flow. */
-  field("clockManual").onclick = () => { closePanel(); document.dispatchEvent(new CustomEvent("clock-manual-time", { detail: { kind: "hours" } })); };
+  /* Time entry / Hour entry tabs, as in the Add manual time entry drawer. Hour entry swaps the time for a h:mm duration. */
+  let kind = "time", action = "in";
+  const kindBtns = [...field("clockKind").querySelectorAll(".seg__opt")];
+  const setKind = k => {
+    kind = k;
+    kindBtns.forEach(b => { const on = b.dataset.kind === k; b.setAttribute("aria-checked", String(on)); b.tabIndex = on ? 0 : -1; });
+    field("clockTimeWrap").hidden = k === "hours";
+    field("clockDurWrap").hidden = k !== "hours";
+    field("clockWorkFields").hidden = k === "time" && action === "out";
+    if (k === "time") time.hug();
+  };
+  kindBtns.forEach((b, i) => {
+    b.onclick = () => setKind(b.dataset.kind);
+    b.onkeydown = event => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+      if (!step) return;
+      event.preventDefault();
+      const next = kindBtns[(i + step + kindBtns.length) % kindBtns.length];
+      setKind(next.dataset.kind); next.focus();
+    };
+  });
+  const dur = field("clockDur"), durTf = field("clockDurWrap");
+  const durError = text => { field("clockDurMsg").textContent = text; durTf.classList.toggle("is-invalid", !!text); dur.setAttribute("aria-invalid", String(!!text)); };
+  dur.addEventListener("input", () => durError(""));
   field("clockForm").onsubmit = event => {
     event.preventDefault();
+    if (kind === "hours") {
+      const m = /^(\d{1,2}):([0-5]\d)$/.exec(dur.value.trim());
+      const minutes = m ? +m[1] * 60 + +m[2] : 0;
+      if (!minutes || minutes > 1440) { durError("Enter a duration as h:mm, for example 2:30"); return dur.focus(); }
+      closePanel();
+      return onSave("hours", { date: datePicker.value, duration: minutes, location: location.value, activity: activity.value, project: project.value, note: note.value.trim() });
+    }
     const minutes = time.commit();
     if (minutes === null) return time.focus();
     closePanel();
     onSave(dialog.dataset.action, { date: datePicker.value, time: minutes, location: location.value, activity: activity.value, project: project.value, note: note.value.trim() });
   };
   const titles = { in: "Confirm Clock In", resume: "Resume last activity", switch: "Switch activity", endbreak: "End break", out: "Clock out" };
-  return function open(action, now, selectedActivity, selectedProject, earliest) {
-    dialog.dataset.action = action;
-    field("clockDialogTitle").textContent = titles[action];
+  return function open(act, now, selectedActivity, selectedProject, earliest) {
+    action = act;
+    dialog.dataset.action = act;
+    dur.value = ""; durError(""); setKind("time");
+    field("clockDialogTitle").textContent = titles[act];
     timeRange = [earliest, now];
     datePicker.value = new Date();
     field("clockEntryTime").closest(".tf").querySelector(".tf__label").textContent = "Time · Today";
     time.reset(now, earliest);
     location.value = "";
     field("clockPanelStatus").textContent = document.getElementById("topLast").textContent;
-    field("clockWorkFields").hidden = action === "out";
+    field("clockWorkFields").hidden = act === "out";
     activity.value = selectedActivity;
     project.value = selectedProject;
     note.value = "";
@@ -249,77 +288,13 @@ function createTimeField(input, periodBtn, toggle, list, msg) {
   };
 }
 
-/* Dropdown field (Figma 588:497085) opening a single-select Dropdown (673:511845). Replaces a native <select>; exposes .value. */
-function createDropdownField(root, initialItems) {
-  let items = initialItems;
-  const icon = id => `<svg class="i" aria-hidden="true"><use href="#i-${id}"/></svg>`;
-  const placeholder = root.dataset.placeholder || "";
-  const uid = root.id;
-  const mode = root.dataset.chip;
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  const label = item => mode ? `<span class="dd-chip dd-chip--${mode}" style="--chip:${mode === "color" ? item.color || "var(--ap-none)" : "var(--ink)"}">${esc(item.name)}</span>` : `<span>${esc(item.name)}</span>`;
-  root.innerHTML = `<span class="dd__label" id="${uid}Label">${root.dataset.label}</span>
-    <button type="button" class="dd__btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="${uid}Label ${uid}Value">
-      <span class="dd__value" id="${uid}Value"></span>${icon("chevron-down")}
-    </button>
-    <div class="menu dd__menu" role="listbox" aria-labelledby="${uid}Label" hidden></div>`;
-  const btn = root.querySelector(".dd__btn"), menu = root.querySelector(".dd__menu"), valueEl = root.querySelector(".dd__value");
-  let opts = [];
-  const render = () => {
-    menu.innerHTML = items.map(item =>
-      `<button type="button" class="menu__opt" role="option" tabindex="-1" data-id="${item.id}" aria-selected="false">${label(item)}${icon("check").replace('class="i"', 'class="i tick"')}</button>`).join("");
-    opts = [...menu.querySelectorAll(".menu__opt")];
-  };
-  render();
-  let current = "";
-  const set = id => {
-    const item = items.find(i => String(i.id) === String(id));
-    current = item ? String(item.id) : "";
-    if (item) valueEl.innerHTML = label(item); else valueEl.textContent = placeholder;
-    root.classList.toggle("is-filled", !!item);
-    opts.forEach(o => o.setAttribute("aria-selected", String(o.dataset.id === current)));
-  };
-  const close = refocus => {
-    menu.hidden = true; root.classList.remove("is-open"); btn.setAttribute("aria-expanded", "false");
-    if (refocus) btn.focus();
-  };
-  const open = () => {
-    document.querySelectorAll(".dd.is-open").forEach(d => d !== root && d.querySelector(".dd__btn").dispatchEvent(new Event("dd-close")));
-    menu.hidden = false; root.classList.add("is-open"); btn.setAttribute("aria-expanded", "true");
-    const room = window.innerHeight - btn.getBoundingClientRect().bottom;
-    menu.classList.toggle("is-up", room < menu.offsetHeight + 12);
-    (opts.find(o => o.getAttribute("aria-selected") === "true") || opts[0])?.focus();
-  };
-  btn.addEventListener("dd-close", () => close(false));
-  btn.onclick = () => menu.hidden ? open() : close(true);
-  btn.onkeydown = event => { if (menu.hidden && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); open(); } };
-  menu.onclick = event => {
-    const opt = event.target.closest(".menu__opt");
-    if (opt) { set(opt.dataset.id); close(true); }
-  };
-  menu.onkeydown = event => {
-    const i = opts.indexOf(document.activeElement);
-    if (event.key === "ArrowDown") opts[Math.min(i + 1, opts.length - 1)].focus();
-    else if (event.key === "ArrowUp") opts[Math.max(i - 1, 0)].focus();
-    else if (event.key === "Home") opts[0].focus();
-    else if (event.key === "End") opts.at(-1).focus();
-    else if (event.key === "Escape") { event.stopPropagation(); close(true); }
-    else if (event.key === "Tab") close(false);
-    else return;
-    if (event.key !== "Tab") event.preventDefault();
-  };
-  document.addEventListener("pointerdown", event => { if (!menu.hidden && !root.contains(event.target)) close(false); });
-  set("");
-  return { get value() { return current; }, set value(id) { set(id); close(false); }, set items(list) { items = list; render(); set(current); } };
-}
-
 /* Resume button content, shared by the top bar and the dashboard clock card: a play icon plus the last clock in's
    activity and project as chips, or just "Resume" when that clock in had neither. Returns the markup and a label. */
 function resumeContent(activity, project) {
   const esc = t => String(t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
   const play = `<svg class="i i-16" aria-hidden="true"><use href="#i-play"/></svg>`;
   const chips = [
-    activity && `<span class="chip chip--activity"><span class="chip__dot"></span><span>${esc(activity.name)}</span></span>`,
+    activity && `<span class="chip chip--activity" style="--chip:${activity.color || "var(--ap-none)"}"><span>${esc(activity.name)}</span></span>`,
     project && `<span class="chip chip--project"><span>${esc(project.name)}</span></span>`,
   ].filter(Boolean);
   const names = [activity?.name, project?.name].filter(Boolean);

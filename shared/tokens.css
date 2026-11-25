@@ -45,14 +45,15 @@
   --on-dark-muted: #B8B8C0;
   --ap-none: #5A5A66;
 
+  /* Activity hues: each tuned in OKLCH to the same 5.0:1 contrast on white so no activity reads louder or fainter. */
   --ap-violet: #C102D2;
   --ap-pink: #CD2978;
-  --ap-red: #D43D2C;
-  --ap-orange: #DF6705;
-  --ap-green: #058502;
-  --ap-turquoise: #02977C;
-  --ap-blue: #135EBF;
-  --ap-purple: #7F2AD4;
+  --ap-red: #CE3726;
+  --ap-orange: #B55306;
+  --ap-green: #068203;
+  --ap-turquoise: #077E67;
+  --ap-blue: #266DD0;
+  --ap-purple: #9143EA;
 
   --radius: 4px;
   --radius-card: 12px; /* read from concept screenshots, not a bound variable */
@@ -72,7 +73,7 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--surface);
+  background: var(--surface-150);
   color: var(--ink);
   font-family: var(--font);
   font-size: 14px;

@@ -398,8 +398,8 @@
         <td class="c-num">${num(used)}${usedSub ? `<span class="sub">${usedSub}</span>` : ""}</td>
         <td class="c-num">${balCell}</td>
         <td class="c-acts"><span class="row-acts">
-          ${capped ? `<button class="round-btn round-btn--36" data-amend aria-label="Adjust ${esc(p.name)} balance for ${esc(m.name)}" title="Adjust balance"><svg class="i i-16"><use href="#i-pencil"/></svg></button>` : ""}
-          <button class="round-btn round-btn--36" data-reqs aria-label="Show ${esc(p.name)} requests for ${esc(m.name)}" title="Show requests"><svg class="i i-16"><use href="#i-history"/></svg></button>
+          ${capped ? `<button class="round-btn round-btn--36" data-amend aria-label="Adjust ${esc(p.name)} balance for ${esc(m.name)}" title="Adjust balance"><svg class="i i-16" aria-hidden="true"><use href="#i-pencil"/></svg></button>` : ""}
+          <button class="round-btn round-btn--36" data-reqs aria-label="Show ${esc(p.name)} requests for ${esc(m.name)}" title="Show requests"><svg class="i i-16" aria-hidden="true"><use href="#i-history"/></svg></button>
         </span></td></tr>`;
     }).join("");
   }
@@ -516,7 +516,8 @@
   // ---------- Add / edit drawer ----------
   const F = { m: $("#fMember"), policy: $("#fPolicy"), from: $("#fFrom"), to: $("#fTo"), half: $("#fHalf"), note: $("#fNote") };
   enhanceDateInput(F.from, "Start date"); enhanceDateInput(F.to, "End date");
-  enhanceSelectField(F.m, "Member"); enhanceSelectField(F.policy, "Policy");
+  enhanceDropdownSelect(F.m); enhanceDropdownSelect(F.policy);
+  const ddBtn = sel => `${sel} + .dd .dd__btn`; /* the native select is hidden; focus goes to its dropdown button */
   let editId = null, halfWhich = "am";
   function openAdd({ date, editId: id } = {}) {
     editId = id || null;
@@ -536,8 +537,9 @@
     $("#addSave").textContent = r ? "Save changes" : "Add time off";
     $("#addError").hidden = true;
     Object.values(F).forEach(f => f.removeAttribute("aria-invalid"));
+    F.m._sync(); F.policy._sync();
     syncAdd();
-    showDrawer($("#addDrawer"), r ? "#fPolicy" : F.m.value ? "#fPolicy" : "#fMember");
+    showDrawer($("#addDrawer"), ddBtn(r || F.m.value ? "#fPolicy" : "#fMember"));
   }
   function draft() {
     return { m: F.m.value, policy: F.policy.value, from: F.from.value, to: F.to.value && F.to.value !== F.from.value ? F.to.value : "", half: F.half.checked ? halfWhich : null, note: F.note.value.trim() };
@@ -569,14 +571,14 @@
     if (p.allowance != null) { const b = S.balance(d.m, d.policy, y, editId); after = ` · ${b.available - S.workdays(d.from, d.to || d.from, d.half, y)} of ${b.entitled} left after this`; }
     sum.innerHTML = `<strong>${esc(S.fmtDays(v.days))} of ${esc(p.name)}</strong><span class="sub">${esc(S.fmtRange(d.from, d.to || d.from))}${exTxt ? ` · not counting ${esc(exTxt)}` : ""}${esc(after)}</span>`;
   }
-  ["change", "input"].forEach(t => $("#addForm").addEventListener(t, e => { if (e.target !== F.note) { e.target.removeAttribute("aria-invalid"); $("#addError").hidden = true; syncAdd(); } }));
+  ["change", "input"].forEach(t => $("#addForm").addEventListener(t, e => { if (e.target !== F.note) { e.target.removeAttribute("aria-invalid"); e.target._sync?.(); $("#addError").hidden = true; syncAdd(); } }));
   roving($("#halfSeg"), ".seg__opt", b => { halfWhich = b.dataset.half; syncAdd(); });
   $("#addForm").addEventListener("submit", e => {
     e.preventDefault();
     const d = draft(), v = S.validate(d, editId);
     if (v.error) {
       const err = $("#addError"); err.textContent = v.error; err.hidden = false;
-      const f = F[v.field]; if (f) { f.setAttribute("aria-invalid", "true"); f.focus(); }
+      const f = F[v.field]; if (f) { f.setAttribute("aria-invalid", "true"); if (f._sync) { f._sync(); $(ddBtn(`#${f.id}`)).focus(); } else f.focus(); }
       return;
     }
     const m = S.memberById(d.m);
@@ -629,6 +631,7 @@
   const fmtClock = ms => new Date(ms).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).toLowerCase();
   const ago = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 1 ? "just now" : m < 60 ? `${m} ${m === 1 ? "minute" : "minutes"} ago` : `${Math.floor(m / 60)} h ago`; };
   const openClockPanel = createClockPanel([{ id: "none", name: "No activity" }, ...ACTIVITIES], PROJECTS, LOCATIONS, (act, f) => {
+    if (act === "hours") { toast("Hour entry added."); return; }
     if (act === "out") { if (clock.st === "in") clock.worked += Date.now() - clock.since; clock.st = "out"; clock.lastOut = Date.now(); }
     else {
       if (clock.st === "in") clock.worked += Date.now() - clock.since;
@@ -648,7 +651,7 @@
     rb.innerHTML = icon(st === "break" ? "play" : "coffee");
     rb.className = "round-btn " + (st === "break" ? "round-btn--go" : "round-btn--break");
     rb.setAttribute("aria-label", st === "break" ? "End break" : "Start break"); rb.title = rb.getAttribute("aria-label");
-    $("#activityLabel").textContent = ACTIVITIES.find(a => a.id === clock.activity)?.name ?? "No activity";
+    { const A = ACTIVITIES.find(a => a.id === clock.activity); $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").style.setProperty("--chip", A?.color ?? "var(--ap-none)"); }
     $("#projectLabel").textContent = PROJECTS.find(p => p.id === clock.project)?.name ?? "No project";
     tickClock();
   }

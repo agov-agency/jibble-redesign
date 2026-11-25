@@ -2,7 +2,7 @@
 name: workflow-reviewer
 description: Reviews redesigned Jibble flows (dashboard, timesheets, clock panel, etc.) against the project's requirements and references. Checks for missing actions, permission-dependent behavior, and empty, loading, and error states. Read-only; use after a flow is redesigned or changed.
 tools: Read, Grep, Glob
-model: inherit
+model: sonnet
 maxTurns: 30
 ---
 

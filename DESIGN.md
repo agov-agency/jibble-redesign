@@ -30,12 +30,12 @@ colors:
   status-yellow-tint: "#FFF8EB"
   ap-violet: "#C102D2"
   ap-pink: "#CD2978"
-  ap-red: "#D43D2C"
-  ap-orange: "#DF6705"
-  ap-green: "#058502"
-  ap-turquoise: "#02977C"
-  ap-blue: "#135EBF"
-  ap-purple: "#7F2AD4"
+  ap-red: "#CE3726"
+  ap-orange: "#B55306"
+  ap-green: "#068203"
+  ap-turquoise: "#077E67"
+  ap-blue: "#266DD0"
+  ap-purple: "#9143EA"
   ultimate: "#A2218A"
   ultimate-100: "#FFEFFF"
   ultimate-200: "#FFD8FE"
@@ -215,7 +215,7 @@ The palette is neutral-led with one orange accent and a functional status set. �
 - **Yellow** (#FDA300, tint #FFF8EB): ✅ Break. 🧪 Probably also "Pending", but not confirmed.
 
 ### Activities & Projects palette
-Eight user-assignable colors (violet `#C102D2`, pink `#CD2978`, red `#D43D2C`, orange `#DF6705`, green `#058502`, turquoise `#02977C`, blue `#135EBF`, purple `#7F2AD4`), each with 75 and 25 tints. ✅ They color anything tied to a user's activity or project: chips, breakdown bars, timeline segments. They are bound as variables in Figma. ❓ Whether to carry the full set is undecided.
+Eight user-assignable colors (violet `#C102D2`, pink `#CD2978`, red `#CE3726`, orange `#B55306`, green `#068203`, turquoise `#077E67`, blue `#266DD0`, purple `#9143EA`), each tuned in OKLCH to the same 5.0:1 contrast on white, with 75 and 25 tints. ✅ They color anything tied to a user's activity or project: chips, breakdown bars, timeline segments. ✅ They also color initials avatars, assigned by a hash of the initials (see Decisions recorded). They are bound as variables in Figma. ❓ Whether to carry the full set is undecided.
 
 ### Ultimate plan
 Magenta set (`#A2218A`, tints `#FFEFFF`, `#FFD8FE`). ✅ Used only for plan upsell. 🧪 A promotional-only palette, never used in task UI.
@@ -291,6 +291,7 @@ Any of these can be added later if a screen needs it.
   - left group: page tabs (on a detail view, a back button then tabs);
   - right group, 542px: the time clock (last-clock-out text, then the activity/project clock control, then a play/stop button), a Members Board button, and the profile menu, with 16px gaps.
 - **Content area:** about 24px side padding.
+- **Page background:** ✅ `body` uses `--surface-150` (`#F7F7F6`, `shared/tokens.css`). Cards and panels sit on white (`--surface`).
 
 **Sidebar across widths.** The sidebar stays at 232px across the whole supported range. The concept has a collapse control but draws no collapsed state: the sidebar component has only Default and Hover variants, both 232px. ❓ How collapsing behaves in the live app is not yet verified (PRODUCT.md, Functional Fidelity). If the live app collapses, that behavior is reproduced and its look is designed from the concept's language, as a recorded gap. 🧪 It is not used to buy width automatically.
 
@@ -438,7 +439,13 @@ Read from Figma on 2026-11-18. ✅ unless tagged otherwise. All text is **Label/
 - States: Enabled, Hovered, Focused, Filled, Filled & Focused. Their borders follow the Input states below; there is no Disabled or Error state.
 - The Chip type is used by no concept screen (see SECTION-C-PROPOSALS.md).
 - The Pagination page-size select uses `Label=No, State=Filled, Type=Default`.
-- **Use it for pick-one-from-a-list fields (rule, 2026-11-18).** ✅ Never use a native `<select>` in a form or side panel. Build it with `createDropdownField` (`shared/clock-panel.js`): it opens the single-select Dropdown list, supports keyboard (arrows, Home/End, Esc, Tab), flips up when short of room, and exposes `.value` and a replaceable `.items`.
+- **Use it for pick-one-from-a-list fields (rule, 2026-11-18).** ✅ Never use a native `<select>` in a form or side panel. Build it with `createDropdownField` (`shared/dropdown.js`, styles `.dd` in `shared/shell.css`): it opens the single-select Dropdown list, supports keyboard (arrows, Home/End, Esc, Tab), flips up when short of room, and exposes `.value` and a replaceable `.items`.
+
+**Dropdown field, shared component. Status: In code.** ✅ `createDropdownField(root, items, { onChange })` in `shared/dropdown.js`, styles `.dd` in `shared/shell.css`. Required variant: `data-required` on the root (set by `enhanceDropdownSelect` from the native `required` attribute on the `<select>`) hides the clear (×) button and the menu's "Clear selection" footer, so the field always holds a value. Fields without it are unchanged. Used by the clock-in panel (location, activity, project), the Add manual time form, the Timesheets Export drawer (Time format and Duration format, both required), and the Time off add and edit drawer (Member and Policy, both required).
+- Opens a single-select menu with an in-menu search (`.field-search--menu`), a "No … found" line, and a "Clear selection" footer. A clear (circled ×) button also shows beside a filled value.
+- Chip mode: set `data-chip="color"` or `data-chip="grey"` on the root and values show as chips.
+- `.value` getter and setter; `.items`, `.disabled` and `.invalid` setters.
+- `enhanceDropdownSelect(select)` swaps the UI of a native `<select>` that stays as the hidden form value.
 
 **In code (2026-11-18).** ✅ You decided to align the code with Figma. `.filter__btn` and `.menu` in `shared/shell.css` now follow these specs.
 - **Trigger:** radius 4, padding 8 / 12 / 10 / 12, Slim label. Borders: Hovered `#DADAD8`, Pressed `#BEBEBB` (new token `--pressed-support`).
@@ -617,8 +624,16 @@ Measurements are in SECTION-C-PROPOSALS.md, section 5.
 
 🧪 Must also follow the Reveal-On-Focus Rule.
 
+### Link button ("Go to…")
+✅ Text link with a trailing 16px arrow-right, used in widget footers ("Go to time off", "Go to locations", "Go to timesheets"). Decided by you:
+- text and arrow are `ink` (black) at rest, not grey;
+- hover shifts to `ink-hover`, and the arrow nudges 2px right;
+- no underline, no background.
+
 ### Shared small parts
 ✅ Avatar (image, initials, icon), tooltip, divider, online dot, scroll bar, progress bar, search field and input atoms.
+
+**Icons.** ✅ Remix Icon line glyphs, not inline SVG. Build them with `riIcon(id, cls)` from `shared/icons.js`, which returns `<i class="i ri-…" aria-hidden="true">` from a lookup of short ids (`clock`, `search`, `chevron-down`). Sizes in `shared/tokens.css`: `i.i` is 20px, `i.i-16` is 16px. `remixicon.css` is loaded on Dashboard, Timesheets and Time off. Figma icon names (`icon / search`) map to these glyphs.
 
 ## Do's and Don'ts
 
@@ -677,7 +692,7 @@ New in code with Timesheets (gaps designed from the concept language):
 - **Selected state.** The current page is an orange outline on primary-25.
 
 Decisions recorded:
-- **Initials avatars stay neutral.** Activities & Projects colours are only for activity and project chips and timeline segments.
+- ✅ **Initials avatars are coloured.** Each avatar gets one of the eight Activities & Projects colours, picked by a hash of its initials so the same person always gets the same colour (`shared/avatar-colors.js` sets `data-c` 0-7 on `.avatar`; `shared/shell.css` maps each to a 16% tint of the colour on white as background and a 70% mix with black as text).
 - **Today on white uses `#C24C00`, a deeper step of Jibble Orange.** It keeps orange text at or above 4.5:1. The brand `#FC6300` stays for fills and large marks.
 - **Text inputs use the shared 2+2px focus ring,** like every other control.
 - **Font.** Inter remains the stand-in for PolySans (open question 2).

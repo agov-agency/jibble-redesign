@@ -44,7 +44,7 @@
     <symbol id="i-logout" viewBox="0 0 20 20"><path d="M9 4H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h4"/><path d="M8 10h8.5M13 6.5l3.5 3.5-3.5 3.5"/></symbol>
     <symbol id="i-x-circle" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5"/><path d="m7.75 7.75 4.5 4.5M12.25 7.75l-4.5 4.5"/></symbol>
     <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="m16 16-3.5-3.5"/></symbol>
-    <symbol id="i-member-board" viewBox="0 0 20 20"><circle cx="9" cy="7" r="2.75"/><path d="M4 16c.6-2.6 2.6-4 5-4 1 0 1.9.2 2.7.7"/><path d="m12.5 15 1.5 1.5 3-3"/></symbol>
+    <symbol id="i-member-board" viewBox="0 0 16 16"><path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd" d="M8 1.83333C6.80338 1.83333 5.83333 2.80338 5.83333 4C5.83333 5.19662 6.80338 6.16667 8 6.16667C9.19662 6.16667 10.1667 5.19662 10.1667 4C10.1667 2.80338 9.19662 1.83333 8 1.83333ZM4.83333 4C4.83333 2.2511 6.2511 0.833333 8 0.833333C9.7489 0.833333 11.1667 2.2511 11.1667 4C11.1667 5.7489 9.7489 7.16667 8 7.16667C6.2511 7.16667 4.83333 5.7489 4.83333 4ZM1.5 14.6667C1.5 11.0768 4.41016 8.16667 8 8.16667C11.5898 8.16667 14.5 11.0768 14.5 14.6667H13.5C13.5 11.6291 11.0376 9.16667 8 9.16667C4.96244 9.16667 2.5 11.6291 2.5 14.6667H1.5ZM6.95762 10.7627C7.11659 10.6746 7.31086 10.6797 7.465 10.776L10.665 12.776C10.8112 12.8674 10.9 13.0276 10.9 13.2C10.9 13.3724 10.8112 13.5326 10.665 13.624L7.465 15.624C7.31087 15.7203 7.11659 15.7254 6.95762 15.6373C6.79864 15.5492 6.7 15.3818 6.7 15.2V11.2C6.7 11.0182 6.79864 10.8508 6.95762 10.7627ZM7.7 12.1021V14.2979L9.4566 13.2L7.7 12.1021Z"/></symbol>
     <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3.5v9M6.5 9 10 12.5 13.5 9M4 15.5h12"/></symbol>
     <symbol id="i-check" viewBox="0 0 20 20"><path d="m5 10.5 3 3 7-7"/></symbol>
     <symbol id="i-collapse" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13M13 8l-2 2 2 2"/></symbol>
@@ -66,8 +66,11 @@
     <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><circle cx="7.5" cy="8" r="1.3"/><path d="M3.5 14l4-3.5 3 2.5 2.5-2 3.5 3"/></symbol>
     <symbol id="i-dots" viewBox="0 0 20 20"><circle cx="5" cy="10" r=".9" fill="currentColor"/><circle cx="10" cy="10" r=".9" fill="currentColor"/><circle cx="15" cy="10" r=".9" fill="currentColor"/></symbol>
     <symbol id="i-sun" viewBox="0 0 20 20"><circle cx="10" cy="10" r="3.5"/><path d="M10 2.5v1.5M10 16v1.5M2.5 10H4M16 10h1.5M4.7 4.7l1 1M14.3 14.3l1 1M4.7 15.3l1-1M14.3 5.7l1-1"/></symbol>
+    <symbol id="i-switch" viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 20 20"><path d="M7.5 4.5v11M12.5 4.5v11"/></symbol>
   </defs>
 </svg>
+
 
 <div class="app" id="app">
   <aside class="sidebar" aria-label="Main">
@@ -77,37 +80,37 @@
         <img class="logo__word" src="../shared/assets/jibble-wordmark.svg" alt="Jibble" width="60.3054" height="18">
       </a>
       <button class="icon-btn sidebar__collapse" id="collapseBtn" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
-        <svg class="i"><use href="#i-collapse"/></svg>
+        <svg class="i" aria-hidden="true"><use href="#i-collapse"/></svg>
       </button>
     </div>
 
     <nav class="nav" aria-label="Primary">
-      <a class="nav__item" href="../dashboard/index.html"><svg class="i"><use href="#i-dashboard"/></svg><span>Dashboard</span></a>
-      <a class="nav__item" href="../timesheets/index.html"><svg class="i"><use href="#i-clock"/></svg><span>Timesheets</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-pin"/></svg><span>Live locations</span></a>
-      <a class="nav__item is-current" href="#/calendar" aria-current="page"><svg class="i"><use href="#i-case"/></svg><span>Time off</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-report"/></svg><span>Reports</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-invoice"/></svg><span>Invoices</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-monitor"/></svg><span>Productivity</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-spark"/></svg><span>Jibble AI</span></a>
+      <a class="nav__item" href="../dashboard/index.html"><svg class="i" aria-hidden="true"><use href="#i-dashboard"/></svg><span>Dashboard</span></a>
+      <a class="nav__item" href="../timesheets/index.html"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span>Timesheets</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg><span>Live locations</span></a>
+      <a class="nav__item is-current" href="#/calendar" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-case"/></svg><span>Time off</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-report"/></svg><span>Reports</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-invoice"/></svg><span>Invoices</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg><span>Productivity</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-spark"/></svg><span>Jibble AI</span></a>
 
       <button class="nav__group" id="settingsToggle" aria-expanded="true" aria-controls="settingsList">
-        <span>Settings</span><svg class="i i-16"><use href="#i-chevron-down"/></svg>
+        <span>Settings</span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       </button>
       <div class="nav__sub" id="settingsList">
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-people"/></svg><span>People</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-timetrack"/></svg><span>Time tracking</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-calendar"/></svg><span>Work schedules</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-case"/></svg><span>Time off &amp; holidays</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-pin"/></svg><span>Locations</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-tag"/></svg><span>Activities &amp; Projects</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-org"/></svg><span>Organization</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-plug"/></svg><span>Integrations</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-people"/></svg><span>People</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-timetrack"/></svg><span>Time tracking</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span>Work schedules</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-case"/></svg><span>Time off &amp; holidays</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg><span>Locations</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-tag"/></svg><span>Activities &amp; Projects</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-org"/></svg><span>Organization</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-plug"/></svg><span>Integrations</span></a>
       </div>
     </nav>
 
     <div class="sidebar__foot">
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-download"/></svg><span>Get the app</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span>Get the app</span></a>
     </div>
   </aside>
 
@@ -136,18 +139,18 @@
         <div class="bar">
           <div class="bar__group">
             <div class="stepper">
-              <button class="round-btn round-btn--outline round-btn--36" id="monPrev" aria-label="Previous month"><svg class="i"><use href="#i-chevron-left"/></svg></button>
+              <button class="round-btn round-btn--outline round-btn--36" id="monPrev" aria-label="Previous month"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
               <h2 class="month-title" id="monLabel" aria-live="polite">November 2026</h2>
-              <button class="round-btn round-btn--outline round-btn--36" id="monNext" aria-label="Next month"><svg class="i"><use href="#i-chevron-right"/></svg></button>
+              <button class="round-btn round-btn--outline round-btn--36" id="monNext" aria-label="Next month"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
             <button class="link-btn" id="monToday" hidden>Today</button>
           </div>
           <div class="bar__group">
             <div class="filter">
-              <button class="filter__btn" id="legendBtn" aria-haspopup="true" aria-expanded="false" aria-controls="legendMenu"><span>Policies</span><span class="filter__count" id="legendCount" hidden></span><svg class="i i-16"><use href="#i-chevron-down"/></svg></button>
+              <button class="filter__btn" id="legendBtn" aria-haspopup="true" aria-expanded="false" aria-controls="legendMenu"><span>Policies</span><span class="filter__count" id="legendCount" hidden></span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
               <div class="menu menu--legend" id="legendMenu" role="group" aria-label="Show policies" hidden></div>
             </div>
-            <button class="btn btn--ink btn--36" data-add><svg class="i i-16"><use href="#i-plus"/></svg>Add time off</button>
+            <button class="btn btn--ink btn--36" data-add><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off</button>
           </div>
         </div>
         <div class="cal" id="cal" role="grid" aria-labelledby="monLabel"></div>
@@ -165,30 +168,30 @@
             </div>
           </div>
           <div class="bar__group">
-            <button class="btn btn--outlined btn--36" id="exportBtn"><svg class="i i-16"><use href="#i-download"/></svg>Export CSV</button>
-            <button class="btn btn--ink btn--36" data-add><svg class="i i-16"><use href="#i-plus"/></svg>Add time off</button>
+            <button class="btn btn--outlined btn--36" id="exportBtn"><svg class="i i-16" aria-hidden="true"><use href="#i-download"/></svg>Export CSV</button>
+            <button class="btn btn--ink btn--36" data-add><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off</button>
           </div>
         </div>
         <div class="bar bar--filters">
           <label class="field-search">
-            <svg class="i i-16"><use href="#i-search"/></svg>
+            <svg class="i i-16" aria-hidden="true"><use href="#i-search"/></svg>
             <span class="sr-only">Search members</span>
             <input type="search" id="reqSearch" placeholder="Search" autocomplete="off">
           </label>
           <div class="filter">
-            <button class="filter__btn" id="whenBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="whenMenu"><span id="whenLabel">Upcoming</span><svg class="i i-16"><use href="#i-chevron-down"/></svg></button>
+            <button class="filter__btn" id="whenBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="whenMenu"><span id="whenLabel">Upcoming</span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
             <div class="menu" id="whenMenu" role="listbox" aria-label="When" hidden>
-              <button class="menu__opt" role="option" data-when="upcoming">Upcoming<svg class="i i-16 tick"><use href="#i-check"/></svg></button>
-              <button class="menu__opt" role="option" data-when="month">This month<svg class="i i-16 tick"><use href="#i-check"/></svg></button>
-              <button class="menu__opt" role="option" data-when="year">This year<svg class="i i-16 tick"><use href="#i-check"/></svg></button>
-              <button class="menu__opt" role="option" data-when="all">Any time<svg class="i i-16 tick"><use href="#i-check"/></svg></button>
+              <button class="menu__opt" role="option" data-when="upcoming">Upcoming<svg class="i i-16 tick" aria-hidden="true"><use href="#i-check"/></svg></button>
+              <button class="menu__opt" role="option" data-when="month">This month<svg class="i i-16 tick" aria-hidden="true"><use href="#i-check"/></svg></button>
+              <button class="menu__opt" role="option" data-when="year">This year<svg class="i i-16 tick" aria-hidden="true"><use href="#i-check"/></svg></button>
+              <button class="menu__opt" role="option" data-when="all">Any time<svg class="i i-16 tick" aria-hidden="true"><use href="#i-check"/></svg></button>
             </div>
           </div>
           <div class="filter">
-            <button class="filter__btn" id="polBtn" aria-haspopup="true" aria-expanded="false" aria-controls="polMenu"><span>Policy</span><span class="filter__count" id="polCount" hidden></span><svg class="i i-16"><use href="#i-chevron-down"/></svg></button>
+            <button class="filter__btn" id="polBtn" aria-haspopup="true" aria-expanded="false" aria-controls="polMenu"><span>Policy</span><span class="filter__count" id="polCount" hidden></span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
             <div class="menu menu--legend" id="polMenu" role="group" aria-label="Filter by policy" hidden></div>
           </div>
-          <button class="filter__btn filter__btn--chip" id="memberChip" hidden><span id="memberChipLabel"></span><span class="filter__x" aria-label="Clear member filter"><svg class="i i-16"><use href="#i-x"/></svg></span></button>
+          <button class="filter__btn filter__btn--chip" id="memberChip" hidden><span id="memberChipLabel"></span><span class="filter__x" aria-label="Clear member filter"><svg class="i i-16" aria-hidden="true"><use href="#i-x"/></svg></span></button>
           <button class="link-btn" id="reqClear" hidden>Clear filters</button>
         </div>
         <div class="tbl-wrap" role="region" aria-label="Time off requests" tabindex="0">
@@ -208,16 +211,16 @@
         <div class="bar">
           <div class="bar__group">
             <div class="stepper">
-              <button class="round-btn round-btn--outline round-btn--36" id="yearPrev" aria-label="Previous year"><svg class="i"><use href="#i-chevron-left"/></svg></button>
+              <button class="round-btn round-btn--outline round-btn--36" id="yearPrev" aria-label="Previous year"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
               <h2 class="month-title" id="yearLabel" aria-live="polite">2026</h2>
-              <button class="round-btn round-btn--outline round-btn--36" id="yearNext" aria-label="Next year"><svg class="i"><use href="#i-chevron-right"/></svg></button>
+              <button class="round-btn round-btn--outline round-btn--36" id="yearNext" aria-label="Next year"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
           </div>
         </div>
         <div class="bal-split">
           <nav class="bal-members" aria-label="Members">
             <label class="field-search bal-members__search">
-              <svg class="i i-16"><use href="#i-search"/></svg>
+              <svg class="i i-16" aria-hidden="true"><use href="#i-search"/></svg>
               <span class="sr-only">Search members</span>
               <input type="search" id="balSearch" placeholder="Search members" autocomplete="off">
             </label>
@@ -256,7 +259,7 @@
 <aside class="drawer" id="addDrawer" role="dialog" aria-modal="true" aria-labelledby="addTitle" hidden>
   <header class="drawer__head">
     <h2 class="drawer__title" id="addTitle">Add time off</h2>
-    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
   </header>
   <form class="drawer__body" id="addForm" novalidate>
     <div class="field"><span class="field__label">Member</span><select name="m" id="fMember" required></select></div>
@@ -266,7 +269,7 @@
       <div class="field"><span class="field__label">End date <span class="field__aside">Optional</span></span><input type="date" name="to" id="fTo"></div>
     </div>
     <div class="half-row" id="halfRow">
-      <label class="check"><input type="checkbox" id="fHalf"><span class="box"><svg class="i"><use href="#i-check"/></svg></span>Half day</label>
+      <label class="check"><input type="checkbox" id="fHalf"><span class="box"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span>Half day</label>
       <div class="seg" role="radiogroup" aria-label="Which half" id="halfSeg" hidden>
         <button type="button" role="radio" class="seg__opt" data-half="am" aria-checked="true">Morning</button>
         <button type="button" role="radio" class="seg__opt" data-half="pm" aria-checked="false" tabindex="-1">Afternoon</button>
@@ -286,7 +289,7 @@
 <aside class="drawer" id="detDrawer" role="dialog" aria-modal="true" aria-labelledby="detTitle" hidden>
   <header class="drawer__head">
     <h2 class="drawer__title" id="detTitle">Time off</h2>
-    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
   </header>
   <div class="drawer__body" id="detBody"></div>
   <footer class="drawer__foot" id="detFoot"></footer>
@@ -296,7 +299,7 @@
 <aside class="drawer" id="amdDrawer" role="dialog" aria-modal="true" aria-labelledby="amdTitle" hidden>
   <header class="drawer__head">
     <h2 class="drawer__title" id="amdTitle">Adjust balance</h2>
-    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
   </header>
   <form class="drawer__body" id="amdForm" novalidate>
     <div class="det-bal" id="amdSummary"></div>
@@ -321,19 +324,21 @@
 <aside class="drawer" id="dayDrawer" role="dialog" aria-modal="true" aria-labelledby="dayTitle" hidden>
   <header class="drawer__head">
     <h2 class="drawer__title" id="dayTitle"></h2>
-    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i"><use href="#i-x"/></svg></button>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
   </header>
   <div class="drawer__body" id="dayBody"></div>
   <footer class="drawer__foot">
-    <button class="btn btn--ink" id="dayAdd"><svg class="i i-16"><use href="#i-plus"/></svg>Add time off on this day</button>
+    <button class="btn btn--ink" id="dayAdd"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off on this day</button>
   </footer>
 </aside>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="../shared/topbar.js"></script>
+<script src="../shared/avatar-colors.js"></script>
 <script src="../shared/menu-search.js"></script>
 <script src="../shared/date-picker.js"></script>
+<script src="../shared/dropdown.js"></script>
 <script src="../shared/clock-panel.js"></script>
 <script src="../shared/top-clock.js"></script>
 <script src="../shared/time-off-store.js"></script>

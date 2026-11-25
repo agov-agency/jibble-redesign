@@ -63,7 +63,7 @@
     const prev = lastWork(), resume = resumeContent(ACTIVITIES.find(x => x.id === prev?.act), PROJECTS.find(x => x.id === prev?.project));
     const tr = $("#topResumeBtn");
     tr.hidden = st !== "out"; tr.innerHTML = resume.html; tr.title = resume.label; tr.setAttribute("aria-label", resume.label);
-    $("#activityLabel").textContent = ACTIVITIES.find(o => o.id === state.activity)?.name ?? "No activity";
+    { const A = ACTIVITIES.find(o => o.id === state.activity); $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").style.setProperty("--chip", A?.color ?? "var(--ap-none)"); }
     $("#projectLabel").textContent = PROJECTS.find(o => o.id === state.project)?.name ?? "No project";
     tick();
   }
@@ -82,6 +82,7 @@
     openPanel(act, nowMin(), prev?.act ?? "", prev?.project ?? "", last()?.end ?? last()?.start ?? 0);
   }
   function commit(act, fields) {
+    if (act === "hours") return; /* manual hours are stored on the timesheet; nothing to change on the clock */
     const l = last(), n = Math.max(fields?.time ?? nowMin(), l?.end ?? l?.start ?? 0);
     if (l && l.end == null) l.end = n;
     if (act === "break") state.entries.push({ type: "break", start: n, end: null });

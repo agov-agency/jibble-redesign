@@ -182,9 +182,9 @@
     }
     if (m.id === ME_ID && info.today) {
       return [
-        ev("in", 8 * 60 + 5, "mgmt", "app", "", "web"),
+        ev("in", 8 * 60 + 5, "meet", "app", "", "web"),
         ev("break", 10 * 60 + 15, null, null, "", "web"),
-        ev("in", 10 * 60 + 34, "meet", "onb", "Client call about the data import timeline.", "web"),
+        ev("in", 10 * 60 + 34, "meet", "app", "Client call about the data import timeline.", "web"),
         ev("out", 11 * 60 + 36, null, null, "", "web"),
       ];
     }
@@ -676,7 +676,7 @@
       else if (col.kind === "last") body = c.lastOut ? clock12(c.lastOut.t) : c.status === "in" || c.status === "break" ? `<span class="tag tag--${c.status === "in" ? "ongoing" : "break"}">${c.status === "in" ? "ongoing" : "on break"}</span>` : null;
       else if (col.kind === "reg") { const r = payroll(c).regular; body = r ? hhmm(r) : null; }
       else if (col.kind === "brk") body = c.brk ? hmm(c.brk) : null;
-      else body = c.acts.length ? `<span class="acts">${c.acts.map(a => { const A = ACTIVITIES.find(x => x.id === a); return A ? `<span class="ap" style="--c:${A.color}">${esc(A.name)}</span>` : ""; }).join("")}</span>` : null;
+      else body = c.acts.length ? `<span class="acts">${c.acts.map(a => { const A = ACTIVITIES.find(x => x.id === a); return A ? `<span class="dd-chip dd-chip--color" style="--chip:${A.color}">${esc(A.name)}</span>` : ""; }).join("")}</span>` : null;
       const tag = col.kind === "first" ? tagFor(c.info) : "";
       return `<a class="cell" href="${href}" aria-label="${esc(m.name)}, ${esc(col.label)}: ${body ? String(body).replace(/<[^>]+>/g, " ").trim() : "none"}">${tag}${body && body.startsWith("<") ? body : `<span class="cell__h${body ? "" : " is-empty"}">${body || "–"}</span>`}</a>`;
     }
@@ -745,7 +745,6 @@
       return `<button role="tab" class="day${k === TODAY_KEY ? " is-today" : ""}${cc.info.future ? " is-future" : ""}" data-day="${k}" aria-selected="${on}" tabindex="${on ? 0 : -1}" aria-controls="dayPanel" aria-label="${fmtDay(d)}${k === TODAY_KEY ? ", today" : ""}: ${cc.info.future ? "upcoming" : hmm(cc.worked) + " tracked"}${cc.info.rest ? ", rest day" : ""}"><span class="day__name">${DOW3[d.getDay()]} ${d.getDate()}</span>${sub}</button>`;
     }).join("");
 
-    renderTimeline(m, c);
     renderEntries(m, c, day);
     renderAccordions(m, week);
     renderPayrollTab(m, week);
@@ -755,21 +754,6 @@
     $("#allTzBtn").textContent = state.allTz ? "Hide other timezones" : "View all timezones";
   }
 
-  function renderTimeline(m, c) {
-    const shift = viewerShift(m), P = min => Math.min(100, Math.max(0, ((min + shift) / 1440) * 100));
-    const segs = c.segs.map(s => {
-      const A = s.act && ACTIVITIES.find(a => a.id === s.act);
-      const bg = s.type === "break" ? "" : `background:${A ? A.color : "var(--green)"}`;
-      const label = `${s.type === "break" ? "Break" : (A ? A.name : "Work")}, ${clockShort(s.from + shift)} – ${s.live ? "now" : clockShort(s.to + shift)}`;
-      return `<span class="tl__seg${s.type === "break" ? " tl__seg--break" : ""}${s.live ? " is-live" : ""}" style="left:${P(s.from)}%;width:${Math.max(0.2, P(s.to) - P(s.from))}%;${bg}" data-tip="${esc(label)}" role="img" tabindex="0" aria-label="${esc(label)}"></span>`;
-    }).join("");
-    const nowMark = c.info.today ? `<span class="tl__now" style="left:${P(nowMin())}%" data-tip="Now"></span>` : "";
-    let ruler = "";
-    for (let h = 1; h < 24; h++) ruler += `<i class="${h % 3 === 0 ? "is-major" : ""}" style="left:${(h / 24) * 100}%"></i>${h % 3 === 0 ? `<span style="left:${(h / 24) * 100}%">${(h % 12) || 12} ${h < 12 ? "am" : "pm"}</span>` : ""}`;
-    $("#dayTimeline").innerHTML = `<div class="tl__track"><span class="tl__split" style="left:0%" data-tip="Split time 12:00 am"></span>${segs}${nowMark}</div><div class="ruler" aria-hidden="true">${ruler}</div>`;
-    $("#dayTimeline").setAttribute("aria-label", `Day timeline, ${state.tzMode === "yours" ? "your" : "their"} timezone`);
-    $("#dayTimeline").setAttribute("role", "group");
-  }
 
   const PLAT = { mobile: ["phone", "Mobile app"], web: ["browser", "Web app"], desktop: ["kiosk", "Desktop app"], kiosk: ["kiosk", "Kiosk"], browser: ["globe", "Browser extension"] };
   function renderEntries(m, c, day) {
@@ -798,7 +782,7 @@
       ].join("");
       const timeTxt = e.type === "hours" ? `<span class="entry__time">${hmm(e.dur)}</span>` : `<span class="entry__time">${clock12(e.t + shift)}${state.allTz && TZ[m.tz].off !== VIEWER_TZ.off ? `<small>${clockShort(e.t + shift + otherShift)} ${state.tzMode === "yours" ? theirLbl : yourLbl}</small>` : ""}</span>`;
       const av = e.flags.face ? avatar(m, 48, "entry-av") : `<span class="avatar entry-av entry-av--icon" aria-hidden="true">${icon("person")}</span>`;
-      const chips = [A && `<span class="ap" style="--c:${A.color}">${esc(A.name)}</span>`, Pj && `<span class="ap" style="--c:${Pj.color}">${esc(Pj.name)}${e.task ? ` · ${esc(e.task)}` : ""}</span>`].filter(Boolean).join("");
+      const chips = [A && `<span class="dd-chip dd-chip--color" style="--chip:${A.color}" title="Activity">${esc(A.name)}</span>`, Pj && `<span class="dd-chip dd-chip--grey" title="Project">${esc(Pj.name)}${e.task ? ` · ${esc(e.task)}` : ""}</span>`].filter(Boolean).join("");
       const deleted = e.deleted ? `<span class="tag tag--deleted">Deleted</span>` : "";
       const label = `${e.type === "hours" ? "Hour entry " + hmm(e.dur) : `${{ in: "Clock in", break: "Break", out: "Clock out" }[e.type]} at ${clock12(e.t + shift)}`}`;
       return `<li class="entry${e.deleted ? " is-deleted" : ""}" data-id="${e.id}">
@@ -868,8 +852,6 @@
   }
   function renderSide(m, week) {
     const off = TZ[m.tz].off;
-    $("#tzLabel").textContent = state.tzMode === "theirs" ? `Their timezone (${gmt(off)})` : `Your timezone (${gmt(VIEWER_TZ.off)})`;
-    $("#tzMenu").innerHTML = [["theirs", `Their timezone (${gmt(off)})`], ["yours", `Your timezone (${gmt(VIEWER_TZ.off)})`]].map(([v, l]) => `<button class="menu__opt" role="option" data-tz="${v}" aria-selected="${state.tzMode === v}">${l}${icon("check", "i i-16 tick")}</button>`).join("");
     const st = memberStatus(m);
     $("#whoBtn").innerHTML = `<span class="who__av" data-status="${st.s}">${avatar(m, 48)}</span><span class="who__text"><span class="who__name">${esc(m.name)}</span><span class="who__meta">${esc(st.text)}</span></span>${icon("chevron-down", "i i-16")}`;
     $("#whoBtn").setAttribute("aria-label", `Member: ${m.name}. ${st.text}. Change member`);
@@ -931,7 +913,7 @@
     $("#topLast").textContent = txt;
     $("#clockCtl").title = txt;
     const A = ACTIVITIES.find(a => a.id === state.activity), Pj = PROJECTS.find(p => p.id === state.project);
-    $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").setAttribute("aria-label", `Activity: ${A?.name ?? "none"}`);
+    $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").style.setProperty("--chip", A?.color ?? "var(--ap-none)"); $("#activityBtn").setAttribute("aria-label", `Activity: ${A?.name ?? "none"}`);
     $("#projectLabel").textContent = Pj?.name ?? "No project"; $("#projectBtn").setAttribute("aria-label", `Project: ${Pj?.name ?? "none"}`);
     const prev = lastClockIn(), resume = resumeContent(ACTIVITIES.find(a => a.id === prev?.act), PROJECTS.find(p => p.id === prev?.proj));
     const top = $("#topResumeBtn");
@@ -960,6 +942,13 @@
     listboxKeys(menu);
   }
   const openClockPanel = createClockPanel(ACTIVITIES, PROJECTS, LOCATIONS, (action, fields) => {
+    if (action === "hours") {
+      const list = entriesFor(ME, new Date(fields.date.getFullYear(), fields.date.getMonth(), fields.date.getDate()));
+      list.push(Object.assign(ev("hours", null, null, null, "", "web"), { act: fields.activity || null, proj: fields.project || null, note: fields.note, loc: fields.location, dur: fields.duration, manual: true }));
+      toast(`Hour entry of ${hmm(fields.duration)} added.`);
+      rerender();
+      return;
+    }
     const isOut = action === "out";
     if (!isOut) { state.activity = fields.activity; state.project = fields.project; }
     const entry = ev(isOut ? "out" : "in", fields.time,
@@ -1084,53 +1073,12 @@
   let editing = null;  // { mid, day, id|null }
   const entryForm = $("#entryForm");
   function fillSelect(sel, opts, value, placeholder) {
-    sel.innerHTML = `<option value="">${placeholder}</option>` + opts.map(o => `<option value="${esc(o.id)}" ${o.id === value ? "selected" : ""}>${esc(o.name)}</option>`).join("");
+    sel.innerHTML = `<option value="">${placeholder}</option>` + opts.map(o => `<option value="${esc(o.id)}"${o.color ? ` data-color="${esc(o.color)}"` : ""} ${o.id === value ? "selected" : ""}>${esc(o.name)}</option>`).join("");
     sel._sync?.();
   }
-  // Searchable single-select: the native <select> stays as the form value; a button + popover replaces its UI.
-  function enhanceSelect(sel) {
-    const label = sel.dataset.combo, wrap = document.createElement("div");
-    wrap.className = "cselect";
-    sel.after(wrap); wrap.appendChild(sel); sel.hidden = true; sel.tabIndex = -1;
-    const btn = document.createElement("button");
-    btn.type = "button"; btn.className = "cselect__btn"; btn.setAttribute("aria-haspopup", "dialog"); btn.setAttribute("aria-expanded", "false");
-    const menu = document.createElement("div");
-    menu.className = "menu menu--full"; menu.hidden = true;
-    wrap.append(btn, menu);
-    const text = () => sel.selectedOptions[0]?.textContent || "";
-    sel._sync = () => {
-      btn.disabled = sel.disabled;
-      btn.innerHTML = `<span class="${sel.value ? "" : "is-placeholder"}">${esc(sel.value ? text() : sel.options[0]?.textContent || "")}</span>`;
-      btn.setAttribute("aria-label", `${label[0].toUpperCase() + label.slice(1)}: ${sel.value ? text() : "none selected"}`);
-    };
-    const pick = v => { sel.value = v; sel.dispatchEvent(new Event("change", { bubbles: true })); sel._sync(); closeMenus(true); };
-    const build = () => {
-      const opts = [...sel.options].filter(o => o.value);
-      menu.setAttribute("role", "dialog"); menu.setAttribute("aria-label", label);
-      menu.innerHTML = `<label class="field-search field-search--menu">${icon("search", "i i-16")}<span class="sr-only">Search ${esc(label)}</span><input type="search" placeholder="Search" data-msearch autocomplete="off"><button type="button" class="field-search__clear" data-sclear aria-label="Clear search" title="Clear search" hidden>${icon("x-circle", "i i-16")}</button></label>
-        <div role="listbox" aria-label="${esc(label)}">${opts.map(o => `<button type="button" class="menu__opt" role="option" data-name="${esc(o.textContent.toLowerCase())}" data-v="${esc(o.value)}" aria-selected="${o.value === sel.value}"><span>${esc(o.textContent)}</span>${icon("check", "i i-16 tick")}</button>`).join("")}</div>
-        <p class="menu__empty" data-empty hidden>No ${esc(label)} found</p>
-        <div class="menu__foot"><button type="button" data-clear${sel.value ? "" : " disabled"}>Clear selection</button></div>`;
-    };
-    btn.addEventListener("click", () => { build(); toggleMenu(btn, menu); if (!menu.hidden) menu.scrollIntoView({ block: "nearest" }); });
-    menu.addEventListener("input", e => { if (e.target.matches("[data-msearch]")) { menu.querySelector("[data-sclear]").hidden = !e.target.value; menuSearch(menu, e.target.value); } });
-    menu.addEventListener("click", e => {
-      if (e.target.closest("[data-sclear]")) { e.preventDefault(); const i = menu.querySelector("[data-msearch]"); i.value = ""; i.dispatchEvent(new Event("input", { bubbles: true })); i.focus(); return; }
-      if (e.target.closest("[data-clear]")) return pick("");
-      const o = e.target.closest("[data-v]"); if (o) pick(o.dataset.v);
-    });
-    menu.addEventListener("keydown", e => {
-      if (!["ArrowDown", "ArrowUp"].includes(e.key)) return;
-      e.preventDefault();
-      const opts = [...menu.querySelectorAll("[role=option]:not(.is-filtered)")], i = opts.indexOf(document.activeElement);
-      opts[i < 0 ? (e.key === "ArrowDown" ? 0 : opts.length - 1) : (i + (e.key === "ArrowDown" ? 1 : -1) + opts.length) % opts.length]?.focus();
-    });
-    sel._sync();
-  }
-  $$("#entryForm select[data-combo]").forEach(enhanceSelect);
+  $$("#entryForm select[data-combo]").forEach(enhanceDropdownSelect);
   enhanceDateInput(entryForm.date, "Date");
-  enhanceSelectField(entryForm.task, "Task");
-  $$("#exportForm select").forEach(s => enhanceSelectField(s, s.closest(".field").querySelector(".field__label").textContent.trim()));
+  $$("#exportForm select").forEach(enhanceDropdownSelect);
   function setKind(kind) {
     $$("#kindSeg .seg__opt").forEach(b => { const on = b.dataset.kind === kind; b.setAttribute("aria-checked", on); b.tabIndex = on ? 0 : -1; });
     $("#typeSeg").hidden = kind === "hours";
@@ -1148,11 +1096,6 @@
     const t = curType();
     $$("#entryForm [data-for]").forEach(f => { f.hidden = !f.dataset.for.split(" ").includes(t); });
   }
-  function syncTasks(val) {
-    const p = PROJECTS.find(x => x.id === entryForm.proj.value);
-    entryForm.task.disabled = !p;
-    fillSelect(entryForm.task, p ? p.tasks.map(t => ({ id: t, name: t })) : [], val || "", p ? "Select a task" : "Select a project first");
-  }
   function openEntry(mid, dayK, id, from) {
     const m = byId(mid), list = entriesFor(m, parseKey(dayK)), e = id ? list.find(x => x.id === id) : null;
     editing = { mid, day: dayK, id: e ? e.id : null };
@@ -1160,7 +1103,9 @@
     $("#kindSeg").hidden = !!e;
     $("#entryDelete").hidden = !e;
     const st = memberStatus(m);
-    $("#entryWho").innerHTML = `<span class="who__av" data-status="${st.s}">${avatar(m, 48)}</span><span class="who__text"><span class="who__name">${esc(m.name)}</span><span class="who__meta">${e ? `Clocked ${e.type === "out" ? "out" : "in"} from ${gmt(TZ[m.tz].off)} · ${esc(PLATFORM_NAME[e.plat] || "Web")}${e.manual ? " · Manual entry" : ""}` : `Clocking from ${gmt(TZ[m.tz].off)} · Split time: 12:00 am · ${esc(st.text)}`}</span></span>`;
+    const tz = gmt(TZ[m.tz].off);
+    const whoMeta = e ? `Clocked ${e.type === "out" ? "out" : "in"} · ${esc(PLATFORM_NAME[e.plat] || "Web")}${e.manual ? " · Manual entry" : ""}` : esc(st.text);
+    $("#entryWho").innerHTML = `<span class="who__av" data-status="${st.s}">${avatar(m, 72)}</span><span class="clock-member__text"><strong class="clock-member__name">${esc(m.name)}</strong><span class="clock-member__meta">${whoMeta}</span><span class="clock-member__chips"><span class="clock-member__chip" title="Clocking from">${tz}</span><span class="clock-member__chip" title="Split time">12:00</span></span></span>`;
     $("#entryTz").textContent = gmt(TZ[m.tz].off);
     entryForm.reset();
     entryForm.date.max = TODAY_KEY;
@@ -1169,7 +1114,6 @@
     fillSelect(entryForm.loc, LOCATIONS, e ? e.loc : m.loc, "Select a location");
     fillSelect(entryForm.act, ACTIVITIES, e ? e.act : "", "Select an activity");
     fillSelect(entryForm.proj, PROJECTS, e ? e.proj : "", "Select a project");
-    syncTasks(e ? e.task : "");
     if (e && e.type === "hours") { setKind("hours"); entryForm.dur.value = hmm(e.dur); }
     else {
       setKind("time"); setType(e ? e.type : "in");
@@ -1183,7 +1127,6 @@
   }
   roving($("#kindSeg"), ".seg__opt", b => setKind(b.dataset.kind));
   roving($("#typeSeg"), ".seg__opt", b => setType(b.dataset.type));
-  entryForm.proj.addEventListener("change", () => syncTasks(""));
   entryForm.addEventListener("submit", e => {
     e.preventDefault();
     const err = msg => { const p = $("#entryError"); p.textContent = msg; p.hidden = false; };
@@ -1192,7 +1135,7 @@
     if (!dayK) { entryForm.date.setAttribute("aria-invalid", "true"); return err("Choose a date."); }
     if (dayK > TODAY_KEY) { entryForm.date.setAttribute("aria-invalid", "true"); return err("Time can't be added to a future date."); }
     const day = parseKey(dayK), list = entriesFor(m, day), type = curType();
-    const base = { act: entryForm.act.value || null, proj: entryForm.proj.value || null, task: entryForm.task.value || "", note: entryForm.note.value.trim(), loc: entryForm.loc.value };
+    const base = { act: entryForm.act.value || null, proj: entryForm.proj.value || null, note: entryForm.note.value.trim(), loc: entryForm.loc.value };
     let label;
     if (type === "hours") {
       const mm = /^(\d{1,2}):([0-5]\d)$/.exec(entryForm.dur.value.trim());
@@ -1537,7 +1480,6 @@
 
   // ---------- Wire up: detail ----------
   $("#backBtn").addEventListener("click", e => { e.preventDefault(); go("#/overview"); });
-  roving($("#detailTabs"), "[data-tab]", t => { go(detailHash(state.detail.mid, state.detail.day, t.dataset.tab)); requestAnimationFrame(() => $(`#detailTabs [data-tab="${t.dataset.tab}"]`).focus()); });
   roving($("#days"), ".day", b => {
     history.replaceState(null, "", detailHash(state.detail.mid, b.dataset.day, state.detail.tab));
     state.detail.day = b.dataset.day; renderDetail();
@@ -1569,9 +1511,6 @@
     b.setAttribute("aria-expanded", state.open[b.dataset.acc]);
     $("#acc-" + b.dataset.acc).hidden = !state.open[b.dataset.acc];
   });
-  $("#tzBtn").addEventListener("click", () => toggleMenu($("#tzBtn"), $("#tzMenu")));
-  listboxKeys($("#tzMenu"));
-  $("#tzMenu").addEventListener("click", e => { const o = e.target.closest("[data-tz]"); if (!o) return; state.tzMode = o.dataset.tz; closeMenus(true); renderDetail(); });
   $("#whoBtn").addEventListener("click", () => { $("#whoSearch").value = ""; renderWhoList(); toggleMenu($("#whoBtn"), $("#whoMenu")); $("#whoSearch").focus(); });
   $("#whoSearch").addEventListener("input", renderWhoList);
   $("#whoMenu").addEventListener("keydown", e => {

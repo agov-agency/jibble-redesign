@@ -12,9 +12,9 @@
   host.innerHTML = `
       <span class="topbar__last" id="topLast">Last out 4 minutes ago</span>
       <div class="clockctl" id="clockCtl">
-        <span class="clockctl__state" id="topState" aria-hidden="true"><svg class="i"><use href="#i-play"/></svg></span>
+        <span class="clockctl__state" id="topState" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></span>
         <div class="pick">
-          <button class="chip chip--activity" id="activityBtn" aria-haspopup="listbox" aria-expanded="false"><span class="chip__dot"></span><span id="activityLabel">Meetings</span></button>
+          <button class="chip chip--activity" id="activityBtn" aria-haspopup="listbox" aria-expanded="false"><span id="activityLabel">Meetings</span></button>
           <div class="menu" id="activityMenu" role="listbox" aria-label="Activity" hidden></div>
         </div>
         <div class="pick">
@@ -24,18 +24,19 @@
       </div>
       <div class="clockrun" id="clockRun" hidden>
         <span class="clockrun__time" id="runTime" role="timer" aria-live="off">0:00:00</span>
-        <button class="round-btn round-btn--go" id="runSwitch" aria-label="Switch activity" title="Switch activity"><svg class="i"><use href="#i-switch"/></svg></button>
-        <button class="round-btn round-btn--break" id="runBreak" aria-label="Start break" title="Start break"><svg class="i"><use href="#i-coffee"/></svg></button>
-        <button class="round-btn round-btn--stop" id="runStop" aria-label="Clock out" title="Clock out"><svg class="i"><use href="#i-stop"/></svg></button>
+        <button class="round-btn round-btn--go" id="runSwitch" aria-label="Switch activity" title="Switch activity"><svg class="i" aria-hidden="true"><use href="#i-switch"/></svg></button>
+        <button class="round-btn round-btn--break" id="runBreak" aria-label="Start break" title="Start break"><svg class="i" aria-hidden="true"><use href="#i-coffee"/></svg></button>
+        <button class="round-btn round-btn--stop" id="runStop" aria-label="Clock out" title="Clock out"><svg class="i" aria-hidden="true"><use href="#i-stop"/></svg></button>
       </div>
       <button class="resume resume-top" id="topResumeBtn" hidden></button>
-      <button class="round-btn round-btn--go" id="topClockBtn" aria-label="Clock in"><svg class="i"><use href="#i-play"/></svg></button>
-      <span class="topbar__sep" aria-hidden="true"></span>
-      <button class="round-btn round-btn--ghost" id="boardBtn" aria-label="Members board" title="Members board"><svg class="i"><use href="#i-member-board"/></svg></button>
-      <span class="topbar__sep" aria-hidden="true"></span>
-      <button class="round-btn round-btn--warn" id="notesBtn" aria-label="Notes" title="Notes"><svg class="i"><use href="#i-notes"/></svg></button>
-      <div class="pick">
-        <button class="avatar avatar--40 avatar--me" id="accountBtn" aria-label="Account menu: Jane Long">JL</button>
-      </div>
+      <button class="round-btn round-btn--go" id="topClockBtn" aria-label="Clock in"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></button>
+      <button class="round-btn round-btn--member" id="boardBtn" aria-label="Clock in for other members" title="Clock in for other members"><svg class="i i--16" aria-hidden="true"><use href="#i-member-board"/></svg></button>
   `;
+  // Profile lives at the bottom of the sidebar.
+  const foot = document.querySelector(".sidebar__foot");
+  if (foot) {
+    foot.insertAdjacentHTML("beforeend", `<div class="pick pick--profile">
+        <button class="profile" id="accountBtn" aria-label="Account menu: Jane Long"><span class="avatar avatar--32 avatar--me" aria-hidden="true">JL</span><span class="profile__txt"><span class="profile__name">Jane Long</span><span class="profile__sub">Owner</span></span></button>
+      </div>`);
+  }
 })();

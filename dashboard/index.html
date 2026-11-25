@@ -40,15 +40,17 @@
     <symbol id="i-login" viewBox="0 0 20 20"><path d="M11 4h4a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-4"/><path d="M3.5 10H12M8.5 6.5 12 10l-3.5 3.5"/></symbol>
     <symbol id="i-search" viewBox="0 0 20 20"><circle cx="9" cy="9" r="5"/><path d="m16 16-3.5-3.5"/></symbol>
     <symbol id="i-x-circle" viewBox="0 0 20 20"><circle cx="10" cy="10" r="6.5"/><path d="m7.75 7.75 4.5 4.5M12.25 7.75l-4.5 4.5"/></symbol>
-    <symbol id="i-member-board" viewBox="0 0 20 20"><circle cx="9" cy="7" r="2.75"/><path d="M4 16c.6-2.6 2.6-4 5-4 1 0 1.9.2 2.7.7"/><path d="m12.5 15 1.5 1.5 3-3"/></symbol>
+    <symbol id="i-member-board" viewBox="0 0 16 16"><path fill="currentColor" stroke="none" fill-rule="evenodd" clip-rule="evenodd" d="M8 1.83333C6.80338 1.83333 5.83333 2.80338 5.83333 4C5.83333 5.19662 6.80338 6.16667 8 6.16667C9.19662 6.16667 10.1667 5.19662 10.1667 4C10.1667 2.80338 9.19662 1.83333 8 1.83333ZM4.83333 4C4.83333 2.2511 6.2511 0.833333 8 0.833333C9.7489 0.833333 11.1667 2.2511 11.1667 4C11.1667 5.7489 9.7489 7.16667 8 7.16667C6.2511 7.16667 4.83333 5.7489 4.83333 4ZM1.5 14.6667C1.5 11.0768 4.41016 8.16667 8 8.16667C11.5898 8.16667 14.5 11.0768 14.5 14.6667H13.5C13.5 11.6291 11.0376 9.16667 8 9.16667C4.96244 9.16667 2.5 11.6291 2.5 14.6667H1.5ZM6.95762 10.7627C7.11659 10.6746 7.31086 10.6797 7.465 10.776L10.665 12.776C10.8112 12.8674 10.9 13.0276 10.9 13.2C10.9 13.3724 10.8112 13.5326 10.665 13.624L7.465 15.624C7.31087 15.7203 7.11659 15.7254 6.95762 15.6373C6.79864 15.5492 6.7 15.3818 6.7 15.2V11.2C6.7 11.0182 6.79864 10.8508 6.95762 10.7627ZM7.7 12.1021V14.2979L9.4566 13.2L7.7 12.1021Z"/></symbol>
     <symbol id="i-widgets" viewBox="0 0 20 20"><rect x="3.5" y="3.5" width="5" height="5" rx="1"/><rect x="11.5" y="3.5" width="5" height="5" rx="1"/><rect x="3.5" y="11.5" width="5" height="5" rx="1"/><path d="M14 11.5v5M11.5 14h5"/></symbol>
     <symbol id="i-eye" viewBox="0 0 20 20"><path d="M2.5 10s2.7-5 7.5-5 7.5 5 7.5 5-2.7 5-7.5 5-7.5-5-7.5-5z"/><circle cx="10" cy="10" r="2.25"/></symbol>
     <symbol id="i-eye-off" viewBox="0 0 20 20"><path d="M8 5.3A7.6 7.6 0 0 1 10 5c4.8 0 7.5 5 7.5 5a12.6 12.6 0 0 1-2.1 2.7M12 14.7a7.6 7.6 0 0 1-2 .3c-4.8 0-7.5-5-7.5-5a12.6 12.6 0 0 1 2.1-2.7M3.5 3.5l13 13"/></symbol>
     <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3.5v9M6.5 9 10 12.5 13.5 9M4 15.5h12"/></symbol>
     <symbol id="i-check" viewBox="0 0 20 20"><path d="m5 10.5 3 3 7-7"/></symbol>
     <symbol id="i-collapse" viewBox="0 0 20 20"><rect x="3" y="3.5" width="14" height="13" rx="1.5"/><path d="M8 3.5v13M13 8l-2 2 2 2"/></symbol>
+    <symbol id="i-switch" viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></symbol>
   </defs>
 </svg>
+
 
 <div class="app" id="app">
   <!-- Sidebar: Figma concept appearance, live navigation items -->
@@ -59,43 +61,44 @@
         <img class="logo__word" src="../shared/assets/jibble-wordmark.svg" alt="Jibble" width="60.3054" height="18">
       </a>
       <button class="icon-btn sidebar__collapse" id="collapseBtn" aria-label="Collapse sidebar" aria-expanded="true" title="Collapse sidebar">
-        <svg class="i"><use href="#i-collapse"/></svg>
+        <svg class="i" aria-hidden="true"><use href="#i-collapse"/></svg>
       </button>
     </div>
 
     <nav class="nav" aria-label="Primary">
-      <a class="nav__item is-current" href="./index.html" aria-current="page"><svg class="i"><use href="#i-dashboard"/></svg><span>Dashboard</span></a>
-      <a class="nav__item" href="../timesheets/index.html"><svg class="i"><use href="#i-clock"/></svg><span>Timesheets</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-pin"/></svg><span>Live locations</span></a>
-      <a class="nav__item" href="../timeoff/index.html"><svg class="i"><use href="#i-case"/></svg><span>Time off</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-report"/></svg><span>Reports</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-invoice"/></svg><span>Invoices</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-monitor"/></svg><span>Productivity</span></a>
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-spark"/></svg><span>Jibble AI</span></a>
+      <a class="nav__item is-current" href="./index.html" aria-current="page"><svg class="i" aria-hidden="true"><use href="#i-dashboard"/></svg><span>Dashboard</span></a>
+      <a class="nav__item" href="../timesheets/index.html"><svg class="i" aria-hidden="true"><use href="#i-clock"/></svg><span>Timesheets</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg><span>Live locations</span></a>
+      <a class="nav__item" href="../timeoff/index.html"><svg class="i" aria-hidden="true"><use href="#i-case"/></svg><span>Time off</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-report"/></svg><span>Reports</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-invoice"/></svg><span>Invoices</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-monitor"/></svg><span>Productivity</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-spark"/></svg><span>Jibble AI</span></a>
 
       <button class="nav__group" id="settingsToggle" aria-expanded="true" aria-controls="settingsList">
-        <span>Settings</span><svg class="i i-16"><use href="#i-chevron-down"/></svg>
+        <span>Settings</span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg>
       </button>
       <div class="nav__sub" id="settingsList">
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-people"/></svg><span>People</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-timetrack"/></svg><span>Time tracking</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-calendar"/></svg><span>Work schedules</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-case"/></svg><span>Time off &amp; holidays</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-pin"/></svg><span>Locations</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-tag"/></svg><span>Activities &amp; Projects</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-org"/></svg><span>Organization</span></a>
-        <a class="nav__item" href="#"><svg class="i"><use href="#i-plug"/></svg><span>Integrations</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-people"/></svg><span>People</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-timetrack"/></svg><span>Time tracking</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-calendar"/></svg><span>Work schedules</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-case"/></svg><span>Time off &amp; holidays</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-pin"/></svg><span>Locations</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-tag"/></svg><span>Activities &amp; Projects</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-org"/></svg><span>Organization</span></a>
+        <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-plug"/></svg><span>Integrations</span></a>
       </div>
     </nav>
 
     <div class="sidebar__foot">
-      <a class="nav__item" href="#"><svg class="i"><use href="#i-download"/></svg><span>Get the app</span></a>
+      <a class="nav__item" href="#"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span>Get the app</span></a>
     </div>
   </aside>
 
   <div class="main">
     <!-- Top bar -->
     <header class="topbar">
+      <h1 class="topbar__title">Dashboard</h1>
       <div class="topbar__right" id="topbarRight"></div>
     </header>
 
@@ -141,7 +144,7 @@
           <div class="widget__head">
             <h2 class="title-1" id="upTitle">Upcoming holidays and time off</h2>
             <div class="widget__tools">
-              <a class="link-btn" href="#">Go to time off<svg class="i i-16"><use href="#i-arrow-right"/></svg></a>
+              <a class="link-btn" href="#">Go to time off<svg class="i i-16" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
             </div>
           </div>
           <ul class="events" id="eventList"></ul>
@@ -151,7 +154,7 @@
             <div class="widget__head">
               <h2 class="title-1" id="locTitle">Locations</h2>
               <div class="widget__tools">
-                <a class="link-btn" href="#">Go to locations <svg class="i i-16"><use href="#i-arrow-right"/></svg></a>
+                <a class="link-btn" href="#">Go to locations <svg class="i i-16" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
               </div>
             </div>
             <div class="map card" id="map"></div>
@@ -172,7 +175,7 @@
         <aside class="card rail" aria-labelledby="railTitle">
           <div class="rail__head">
             <h2 class="title-1" id="railTitle">Who's in/out</h2>
-            <span class="muted" id="railCount">13 members</span>
+            <span class="muted" id="railCount">(13 members)</span>
           </div>
           <div class="counts" role="tablist" aria-label="Member status" id="countTabs">
             <button role="tab" class="counts__tab" data-status="in" aria-selected="true"><span class="counts__n" id="nIn">0</span><span class="counts__l">In</span></button>
@@ -180,10 +183,10 @@
             <button role="tab" class="counts__tab" data-status="out" aria-selected="false" tabindex="-1"><span class="counts__n" id="nOut">0</span><span class="counts__l">Out</span></button>
           </div>
           <label class="search">
-            <svg class="i i-16"><use href="#i-search"/></svg>
+            <svg class="i i-16" aria-hidden="true"><use href="#i-search"/></svg>
             <span class="sr-only">Search members</span>
             <input type="search" id="memberSearch" placeholder="Search members" autocomplete="off">
-            <button type="button" class="search__clear" id="memberSearchClear" aria-label="Clear search" title="Clear search" hidden><svg class="i i-16"><use href="#i-x-circle"/></svg></button>
+            <button type="button" class="search__clear" id="memberSearchClear" aria-label="Clear search" title="Clear search" hidden><svg class="i i-16" aria-hidden="true"><use href="#i-x-circle"/></svg></button>
           </label>
           <ul class="members" id="memberList" role="tabpanel" tabindex="0" aria-label="Members"></ul>
         </aside>
@@ -192,23 +195,23 @@
         <section class="card widget hours" data-widget="hours" aria-labelledby="hoursTitle">
           <div class="widget__head">
             <span></span>
-            <a class="link-btn" href="../timesheets/index.html">Go to timesheets <svg class="i i-16"><use href="#i-arrow-right"/></svg></a>
+            <a class="link-btn" href="../timesheets/index.html">Go to timesheets <svg class="i i-16" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
           </div>
           <div id="hoursMount"></div>
         </section>
 
         <!-- Top 10 projects -->
-        <section class="card widget dark projects" data-widget="projects" aria-labelledby="projTitle">
+        <section class="card widget projects" data-widget="projects" aria-labelledby="projTitle">
           <div class="widget__head">
-            <h2 class="title-1" id="projTitle">Top 10 projects</h2>
+            <h2 class="title-1 widget__title" id="projTitle">Top 10 projects<svg class="i i-16" aria-hidden="true"><use href="#i-case"/></svg></h2>
           </div>
           <div id="projMount"></div>
         </section>
 
         <!-- Top 10 activities -->
-        <section class="card widget dark activities" data-widget="activities" aria-labelledby="actTitle">
+        <section class="card widget activities" data-widget="activities" aria-labelledby="actTitle">
           <div class="widget__head">
-            <h2 class="title-1" id="actTitle">Top 10 activities</h2>
+            <h2 class="title-1 widget__title" id="actTitle">Top 10 activities<svg class="i i-16" aria-hidden="true"><use href="#i-tag"/></svg></h2>
           </div>
           <div id="actMount"></div>
         </section>
@@ -216,8 +219,8 @@
       </div>
 
       <div class="configure">
-        <button class="btn btn--outlined" id="configureBtn" aria-haspopup="true" aria-expanded="false" aria-controls="configureMenu">
-          <svg class="i i-16"><use href="#i-widgets"/></svg> Configure widgets
+        <button class="btn btn--ink" id="configureBtn" aria-haspopup="true" aria-expanded="false" aria-controls="configureMenu">
+          <svg class="i i-16" aria-hidden="true"><use href="#i-widgets"/></svg> Configure widgets
         </button>
         <div class="menu menu--configure" id="configureMenu" hidden>
           <p class="menu__title">Show on dashboard</p>
@@ -229,11 +232,14 @@
 
 
 <script src="../shared/topbar.js"></script>
+<script src="../shared/avatar-colors.js"></script>
 <script src="../shared/menu-search.js"></script>
 <script src="../shared/date-picker.js"></script>
+<script src="../shared/dropdown.js"></script>
 <script src="../shared/clock-panel.js"></script>
 <script src="dashboard.js"></script>
 <script type="module" src="./widgets.jsx"></script>
+<script type="module" src="./map.js"></script>
 <script src="../shared/account.js"></script>
 </body>
 </html>

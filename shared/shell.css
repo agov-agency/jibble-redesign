@@ -1,19 +1,23 @@
 /* Shared app shell and controls: sidebar, top bar, tabs, clock control, buttons, segmented control, filter menus. Figma concept language. Used by Dashboard and Timesheets. */
 
 /* ---------- Shell ---------- */
-.app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; }
+.app { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: 100vh; background: var(--surface-150); }
 .app.is-collapsed { --sidebar-w: 64px; }
 
 .sidebar {
-  position: sticky; top: 0; height: 100vh;
+  position: sticky; top: 0; z-index: 30; height: 100vh; margin: 0;
   display: flex; flex-direction: column;
-  background: var(--surface-150);
-  padding: 16px 8px 12px;
+  background: var(--surface);
+  padding: 0 8px 12px;
   overflow: hidden auto;
+  border-right: 1px solid var(--surface-250);
 }
-.sidebar__head { position: relative; display: flex; align-items: center; padding: 0 8px 0 16px; height: 32px; margin-bottom: 16px; }
-.sidebar__collapse { position: absolute; top: 0; bottom: 0; right: 8px; margin: auto 0; }
+.sidebar__head { position: relative; display: flex; align-items: center; padding: 0 16px 0 24px; height: var(--topbar-h); margin: 0 -8px 8px; }
+.sidebar__collapse { position: absolute; top: 0; bottom: 0; right: 16px; margin: auto 0; }
 .sidebar__collapse .i { transition: transform .24s var(--ease-sidebar); }
+.sidebar__collapse { opacity: 0; pointer-events: none; }
+.sidebar:hover .sidebar__collapse,
+.sidebar__collapse:focus-visible { opacity: 1; pointer-events: auto; }
 .logo { display: inline-flex; align-items: flex-end; gap: 4px; color: var(--ink); text-decoration: none; border-radius: var(--radius); }
 .logo__mark { display: block; width: 20px; height: 20px; flex: none; }
 .logo__word { display: block; width: 60.3054px; height: 18px; flex: none; }
@@ -26,7 +30,7 @@
 }
 .nav__item .i { color: var(--ink-650); flex: none; }
 .nav__item:hover { background: var(--surface-250); color: var(--ink); }
-.nav__item.is-current { background: var(--surface); color: var(--ink); }
+.nav__item.is-current { background: var(--surface-200); color: var(--ink); }
 .nav__item.is-current .i { color: var(--primary); }
 .nav__group {
   display: flex; align-items: center; justify-content: space-between;
@@ -38,17 +42,26 @@
 .nav__group[aria-expanded="false"] .i { transform: rotate(-90deg); }
 .nav__sub { display: flex; flex-direction: column; gap: 2px; }
 .nav__sub[hidden] { display: none; }
-.sidebar__foot { margin-top: auto; padding-top: 16px; }
+.sidebar__foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 2px; }
+.pick--profile { position: relative; margin-top: 6px; padding-top: 8px; }
+.pick--profile::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: var(--surface-250); }
+.profile { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.profile:hover { background: var(--surface-250); }
+.profile__txt { min-width: 0; overflow: hidden; white-space: nowrap; }
+.profile__name { display: block; line-height: 18px; }
+.profile__sub { display: block; font-size: 12px; line-height: 16px; font-weight: 300; color: var(--ink-650); }
+.app.is-collapsed .profile { padding: 6px 8px; }
+.app.is-collapsed .profile__txt { display: none; }
 
 /* Collapsed rail: everything stays in the flow so it can animate; labels fade, icons land on the 64px centre line. */
 .app.is-collapsed .logo__word { width: 0; opacity: 0; }
 .app.is-collapsed .nav__item span,
 .app.is-collapsed .nav__group span { opacity: 0; }
 .app.is-collapsed .nav__group span { max-width: 0; }
-.app.is-collapsed .sidebar__head { padding: 0 0 0 14px; }
+.app.is-collapsed .sidebar__head { padding: 0 0 0 22px; }
 .app.is-collapsed .nav__item { padding: 8px 14px; }
 .app.is-collapsed .nav__group { margin-top: 12px; }
-.app.is-collapsed .sidebar__collapse { right: 10px; opacity: 0; pointer-events: none; }
+.app.is-collapsed .sidebar__collapse { right: 18px; opacity: 0; pointer-events: none; }
 .app.is-collapsed .sidebar__head:hover .sidebar__collapse,
 .app.is-collapsed .sidebar__collapse:focus-visible { opacity: 1; pointer-events: auto; }
 .app.is-collapsed .sidebar__head:hover .logo__mark,
@@ -81,18 +94,19 @@
   background: var(--surface);
   border-bottom: 1px solid var(--surface-250);
 }
+.topbar__title { margin: 0; font: inherit; line-height: 20px; color: var(--ink); white-space: nowrap; }
 .topbar__right { margin-left: auto; display: flex; align-items: center; gap: 16px; min-width: 0; }
 .topbar__last { font-size: 12px; line-height: 16px; color: var(--ink-muted); white-space: nowrap; }
 
 /* Tabs (concept top-bar tabs: grey track, white selected) */
-.tabs { display: inline-flex; padding: 4px; gap: 0; background: var(--surface-150); border-radius: 8px; flex: none; }
+.tabs { display: inline-flex; padding: 4px; gap: 0; background: var(--surface-250); border-radius: 8px; flex: none; }
 .tabs__tab {
   padding: 6px 16px; border-radius: 6px; white-space: nowrap;
   color: var(--ink-650); line-height: 20px;
   transition: background-color .15s, color .15s;
 }
-.tabs__tab:hover { color: var(--ink); }
-.tabs__tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px #0707170F; }
+.tabs__tab:hover { color: var(--ink); background: var(--surface-200); }
+.tabs__tab[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px #07071714, 0 0 0 1px #0707170A; }
 
 /* Time clock control */
 .clockctl {
@@ -111,9 +125,9 @@
   max-width: 140px;
 }
 .chip span:last-child { overflow: hidden; text-overflow: ellipsis; }
-.chip--activity { background: var(--red-tint); color: var(--red-text); }
-.chip--activity .chip__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
-.chip--project { background: var(--green-tint); color: var(--green-text); }
+/* Same look as .dd-chip--color / .dd-chip--grey so activities and projects read identically everywhere. */
+.chip--activity { --chip: var(--ap-none); color: color-mix(in srgb, var(--chip) 62%, #000); background: color-mix(in srgb, var(--chip) 8%, white); border: 1px solid color-mix(in srgb, var(--chip) 14%, white); }
+.chip--project { color: var(--ink); background: var(--surface-200); border: 1px solid var(--surface-250); }
 .chip:hover { filter: brightness(.97); }
 
 /* Resume: clock back in with the last activity and project (chips), or plain "Resume" when there were none. */
@@ -144,16 +158,26 @@
 .round-btn--stop:hover { background: var(--red-hover); }
 .round-btn--ghost { color: var(--green); border: 1px solid var(--surface-250); }
 .round-btn--ghost:hover { border-color: var(--hover-support); color: var(--green-text); }
+.round-btn--member { width: 36px; height: 36px; background: var(--green-tint); color: var(--green); }
+.round-btn--member:hover { background: var(--green-tint); color: var(--green-text); filter: brightness(.97); }
+.round-btn--member .i--16 { width: 16px; height: 16px; }
 
 .avatar {
   display: inline-grid; place-items: center; flex: none;
   border-radius: 50%; font-weight: 500; letter-spacing: 0;
-  background: var(--surface-200); color: var(--ink-650);
+  background: var(--surface-200); color: var(--ink-650); /* fallback; per-person colour via data-c, --me stays red */
 }
 .avatar--32 { width: 32px; height: 32px; font-size: 12px; }
 .avatar--40 { width: 40px; height: 40px; font-size: 14px; }
 .avatar--72 { width: 72px; height: 72px; font-size: 22px; }
-.avatar--me { background: var(--red); color: var(--surface); }
+.avatar[data-c="0"] { background: color-mix(in srgb, var(--ap-violet) 16%, #fff); color: color-mix(in srgb, var(--ap-violet) 70%, #000); }
+.avatar[data-c="1"] { background: color-mix(in srgb, var(--ap-pink) 16%, #fff); color: color-mix(in srgb, var(--ap-pink) 70%, #000); }
+.avatar[data-c="2"] { background: color-mix(in srgb, var(--ap-orange) 16%, #fff); color: color-mix(in srgb, var(--ap-orange) 70%, #000); }
+.avatar[data-c="3"] { background: color-mix(in srgb, var(--ap-green) 16%, #fff); color: color-mix(in srgb, var(--ap-green) 70%, #000); }
+.avatar[data-c="4"] { background: color-mix(in srgb, var(--ap-turquoise) 16%, #fff); color: color-mix(in srgb, var(--ap-turquoise) 70%, #000); }
+.avatar[data-c="5"] { background: color-mix(in srgb, var(--ap-blue) 16%, #fff); color: color-mix(in srgb, var(--ap-blue) 70%, #000); }
+.avatar[data-c="6"] { background: color-mix(in srgb, var(--ap-purple) 16%, #fff); color: color-mix(in srgb, var(--ap-purple) 70%, #000); }
+.avatar[data-c="7"] { background: color-mix(in srgb, var(--ap-red) 16%, #fff); color: color-mix(in srgb, var(--ap-red) 70%, #000); }
 
 .icon-btn {
   width: 28px; height: 28px; border-radius: 50%;
@@ -165,10 +189,10 @@
 
 .link-btn {
   display: inline-flex; align-items: center; gap: 4px;
-  color: var(--ink-650); text-decoration: none; white-space: nowrap;
+  color: var(--ink); text-decoration: none; white-space: nowrap;
   border-radius: var(--radius); transition: color .15s;
 }
-.link-btn:hover { color: var(--ink); }
+.link-btn:hover { color: var(--ink-hover); }
 .link-btn .i { transition: transform .15s; }
 .link-btn:hover .i { transform: translateX(2px); }
 
@@ -188,7 +212,7 @@
 .btn--lg { height: 48px; padding: 0 28px; font-size: 16px; }
 
 /* Top bar ladder (DESIGN.md, Layout): tighter padding, then tab padding, then "Last out" moves into the clock control's tooltip and accessible name. */
-.content { padding: 24px var(--pad) 0; }
+.content { flex: 1; padding: 24px var(--pad) 0; }
 
 @media (max-width: 1279px) {
   .content { --pad: 16px; }
@@ -200,27 +224,30 @@
   .topbar__last { display: none; }
 }
 
-.seg { display: inline-flex; padding: 4px; background: var(--surface-150); border-radius: 8px; }
+.seg { display: inline-flex; padding: 4px; background: var(--surface-250); border-radius: 8px; }
 .seg__opt { padding: 4px 14px; border-radius: 6px; color: var(--ink-650); line-height: 20px; transition: background-color .15s, color .15s; }
-.seg__opt:hover { color: var(--ink); }
-.seg__opt[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px #0707170F; }
+.seg__opt:hover { color: var(--ink); background: var(--surface-200); }
+.seg__opt[aria-checked="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px #07071714, 0 0 0 1px #0707170A; }
+.seg--full { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; }
+.seg--full .seg__opt { text-align: center; padding: 6px 8px; }
+.seg[hidden] { display: none; }
 
 /* Filter dropdowns (Figma: Dropdown Selector 615:499037, Dropdown 673:511845, List Item 609:498725) */
 .filter { position: relative; }
 .filter__btn {
   display: inline-flex; align-items: center; gap: 4px;
-  height: 36px; padding: 8px 12px 10px; line-height: 18px; font-weight: 300;
-  border: 1px solid var(--surface-250); border-radius: var(--radius);
+  height: 36px; padding: 0 12px; line-height: 18px; font-weight: 300;
+  border: 1px solid var(--surface-250); border-radius: var(--radius-pill);
   background: var(--surface); color: var(--ink); white-space: nowrap;
   transition: border-color .15s, color .15s;
 }
 .filter__btn .i { color: currentColor; transition: transform .15s; }
 .filter__btn:hover { border-color: var(--hover-support); }
 .filter__btn:active { border-color: var(--pressed-support); }
-/* Activated (open) and Selected (has a value): Primary 100 border, orange label and chevron */
-.filter__btn[aria-expanded="true"], .filter__btn.is-active { border-color: var(--primary-100); color: var(--primary-text); }
+/* Activated (open) and Selected (has a value): hover-style border, Ink label */
+.filter__btn[aria-expanded="true"], .filter__btn.is-active { border-color: var(--hover-support); color: var(--ink-650); }
 .filter__btn[aria-expanded="true"] > .i:last-child { transform: rotate(180deg); }
-.filter__count { display: inline-grid; place-items: center; min-width: 20px; height: 16px; padding: 1px 4px; border-radius: 12px; background: var(--primary-text); color: var(--surface); font-size: 12px; line-height: 14px; font-weight: 400; }
+.filter__count { display: inline-grid; place-items: center; min-width: 20px; height: 16px; padding: 1px 4px; border-radius: 12px; background: var(--ink); color: var(--surface); font-size: 12px; line-height: 14px; font-weight: 400; }
 
 .menu {
   position: absolute; top: calc(100% + 6px); left: 0; z-index: 40;
@@ -269,7 +296,7 @@
 .menu .field-search--menu:focus-within > .i:first-child { color: var(--ink); }
 .menu .field-search--menu input { flex: 1; min-width: 0; height: 20px; padding: 0; border: 0; outline: 0; background: none; color: var(--ink); caret-color: var(--primary); font-weight: 300; line-height: 18px; }
 .menu .field-search--menu input:focus-visible { box-shadow: none; }
-.menu .field-search--menu input::placeholder { color: var(--border-450); }
+.menu .field-search--menu input::placeholder { color: var(--ink-muted); }
 .menu .field-search--menu input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .field-search__clear { display: grid; place-items: center; flex: none; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-subtle); cursor: pointer; }
 .field-search__clear[hidden] { display: none; }
@@ -300,6 +327,20 @@
 .acct__chev { margin-left: auto; display: inline-flex; color: var(--ink-muted); }
 .menu--account .menu__opt .i { flex: none; color: var(--ink-650); }
 .acct__back { color: var(--ink-650); }
+.acct__org[aria-expanded="true"] .acct__chev { transform: translateX(2px); }
+.acct__chev { transition: transform .2s var(--ease-out, cubic-bezier(.2, .8, .2, 1)); }
+.menu--account.is-closing { pointer-events: none; animation-duration: .12s; animation-timing-function: ease-in; animation-fill-mode: forwards; animation-direction: normal; }
+.menu--account:not(.menu--flyout).is-closing { animation-name: acct-out; }
+.menu--flyout.is-closing { animation-name: flyout-out; }
+@keyframes acct-out { to { opacity: 0; transform: translateY(6px) scale(.98); } }
+@keyframes flyout-out { to { opacity: 0; transform: translateX(-6px) scale(.98); } }
+/* Profile menu: rises from the profile button */
+.menu--account:not(.menu--flyout) { transform-origin: left bottom; animation: acct-in .18s cubic-bezier(.2, .8, .2, 1); }
+@keyframes acct-in { from { opacity: 0; transform: translateY(6px) scale(.98); } }
+/* Organization flyout: opens to the right of the profile menu */
+.menu--flyout { transform-origin: left top; animation: flyout-in .18s cubic-bezier(.2, .8, .2, 1); }
+@keyframes flyout-in { from { opacity: 0; transform: translateX(-6px) scale(.98); } }
+@media (prefers-reduced-motion: reduce) { .menu--flyout, .menu--account { animation: none; } }
 .menu__opt[role=menuitemradio] .tick { margin-left: auto; display: inline-flex; visibility: hidden; }
 .menu__opt[role=menuitemradio][aria-checked="true"] .tick { visibility: visible; color: var(--primary); }
 .menu--account .menu__opt[role=menuitemradio][aria-checked="true"] .tick .i { color: var(--primary); }
@@ -335,10 +376,10 @@
 .scope-switch { align-self: flex-start; }
 
 .clock-dialog {
-  position: fixed; inset: 0 0 0 auto; margin: 0; width: min(480px, 100%);
-  max-width: 100%; height: 100%; max-height: 100%;
-  padding: 0; border: 0; border-left: 1px solid var(--surface-250);
-  color: var(--ink); background: var(--surface); box-shadow: var(--shadow-dropdown);
+  position: fixed; inset: 12px 12px 12px auto; margin: 0; width: min(480px, calc(100% - 24px));
+  max-width: calc(100% - 24px); height: calc(100% - 24px); max-height: calc(100% - 24px);
+  padding: 0; border: 1px solid var(--surface-250); border-radius: var(--radius-card); overflow: hidden;
+  color: var(--ink); background: var(--surface-150); box-shadow: 0 0 3px #0000000D, 0 16px 40px #00000020;
 }
 .clock-dialog form { display: flex; flex-direction: column; height: 100%; }
 /* Overlay / Header (490:506141): no divider, 24px top, 8px bottom */
@@ -347,22 +388,22 @@
 .clock-dialog__close:hover { border-color: var(--hover-support); background: var(--surface-100); }
 .clock-dialog__close:active { border-color: var(--pressed-support); background: var(--surface-150); }
 .clock-dialog__close .i { width: 16px; height: 16px; }
-.clock-dialog__body { flex: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+.clock-dialog__body { flex: 1; overflow-y: auto; padding: 8px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
 .clock-dialog__body .dd, .clock-dialog__body .tf { margin-top: 0; }
-#clockWorkFields { display: flex; flex-direction: column; gap: 16px; }
+#clockWorkFields { display: flex; flex-direction: column; gap: 12px; }
 #clockWorkFields[hidden] { display: none; }
 /* Field titles are not shown in this design; keep them for assistive tech */
 .clock-dialog .tf__label, .clock-dialog .dd__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .clock-dialog .tf__menu { top: calc(100% + 2px); }
 .clock-dialog .tf__menu.is-up { bottom: calc(100% + 2px); }
 /* Member block (673:513397), without the chevron */
-.clock-member { display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 4px; border: 1px solid var(--surface-250); border-radius: var(--radius); }
+.clock-member { display: flex; align-items: center; gap: 12px; padding: 4px 0 8px; margin-bottom: 4px; border-radius: var(--radius); }
 .clock-member__text { display: flex; flex-direction: column; min-width: 0; }
 .clock-member__name { font-size: 16px; line-height: 20px; font-weight: 400; color: var(--ink); }
 .clock-member__meta { font-size: 12px; line-height: 16px; font-weight: 300; color: var(--ink-muted); }
 .clock-member__chips { display: flex; gap: 4px; margin-top: 16px; }
-.clock-member__chip { padding: 3px 8px 5px; border-radius: 36px; background: var(--surface-150); font-size: 12px; line-height: 12px; color: var(--ink-650); }
-.clock-dialog__row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.clock-member__chip { padding: 3px 8px 5px; border-radius: 36px; background: var(--surface-200); font-size: 12px; line-height: 12px; color: var(--ink-650); }
+.clock-dialog__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
 .time-field--static { cursor: default; font-size: 14px; line-height: 18px; font-weight: 300; }
 .time-field--static:hover { border-color: var(--surface-250); }
 .time-field--static > span { flex: 1; }
@@ -407,8 +448,8 @@
 @media (prefers-reduced-motion: no-preference) {
   .clock-dialog[open] { animation: clock-panel-in .24s cubic-bezier(.16, 1, .3, 1); }
 }
-@keyframes clock-panel-in { from { transform: translateX(100%); } }
-@keyframes clock-panel-out { to { transform: translateX(100%); } }
+@keyframes clock-panel-in { from { transform: translateX(calc(100% + 12px)); } }
+@keyframes clock-panel-out { to { transform: translateX(calc(100% + 12px)); } }
 @media (prefers-reduced-motion: no-preference) {
   .clock-dialog.is-closing { animation: clock-panel-out .24s cubic-bezier(.16, 1, .3, 1) forwards; }
   .clock-dialog.is-closing::backdrop { opacity: 0; }
@@ -426,7 +467,7 @@
   caret-color: var(--primary); transition: border-color .15s;
 }
 .clock-dialog select { appearance: none; padding-right: 32px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23070717' stroke-width='1.5'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E") no-repeat right 8px center / 16px; }
-.clock-dialog input::placeholder, .clock-dialog textarea::placeholder { color: var(--ink-subtle); }
+.clock-dialog input::placeholder, .clock-dialog textarea::placeholder { color: var(--ink-muted); }
 .clock-dialog input:hover, .clock-dialog select:hover, .clock-dialog textarea:hover { border-color: var(--hover-support); }
 .clock-dialog input:focus, .clock-dialog select:focus, .clock-dialog textarea:focus { outline: 0; border-color: var(--primary-100); box-shadow: none; } /* Figma Focused: Primary 100 border and orange caret only */
 /* Time entry: text input (h:mm) with clickable AM / PM toggle in the trailing slot. One field border; the input inside is bare. */
@@ -446,6 +487,7 @@
 .clock-dialog .tf__label { display: block; margin: 0; }
 .tf.is-open .time-field { border-color: var(--primary-100); }
 .tf.is-invalid .time-field, .tf.is-invalid .time-field:hover { border-color: var(--red); }
+.clock-dialog .tf.is-invalid input#clockDur { border-color: var(--red); }
 .tf__msg { font-size: 12px; line-height: 16px; color: var(--red-text); }
 .tf__msg:empty { display: none; }
 .tf__menu { top: 56px; }
@@ -454,6 +496,8 @@
 .tf__ago { margin-left: auto; font-size: 12px; color: var(--ink-subtle); }
 /* Text area (673:523098): 120px tall, padding 12, no resize */
 .clock-dialog textarea { height: 120px; padding: 12px; resize: none; }
+/* Inputs in the side panel are 40px tall (textarea excluded) */
+.clock-dialog .time-field, .clock-dialog .dd__btn, .clock-dialog input:not(.time-field input), .clock-dialog select { min-height: 40px; }
 /* Dropdown field (Figma 588:497085): 36px, padding 8, gap 8; opens a single-select Dropdown (673:511845) */
 .dd { position: relative; display: grid; gap: 8px; margin-top: 16px; font-size: 14px; line-height: 18px; color: var(--ink); }
 .dd__label { font-size: 12px; line-height: 12px; } /* Atom / Input title: Label/L2 Neutral */
@@ -472,15 +516,12 @@
 .dd__btn .i { flex: none; width: 16px; height: 16px; color: var(--ink); transition: transform .15s; }
 .dd.is-open .dd__btn .i { transform: rotate(180deg); }
 .dd-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: var(--radius-pill); font-size: 12px; line-height: 16px; font-weight: 400; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.dd-chip--color { color: var(--chip); background: color-mix(in srgb, var(--chip) 8%, white); border: 1px solid color-mix(in srgb, var(--chip) 14%, white); }
+.dd-chip--color { color: color-mix(in srgb, var(--chip) 62%, #000); background: color-mix(in srgb, var(--chip) 8%, white); border: 1px solid color-mix(in srgb, var(--chip) 14%, white); }
 .dd-chip--grey { color: var(--ink); background: var(--surface-200); border: 1px solid var(--surface-250); }
-.dd__menu { top: 100%; left: 0; right: 0; min-width: 0; max-width: none; max-height: 220px; margin-top: 2px; }
+.dd__menu { top: 100%; left: 0; right: 0; min-width: 0; max-width: none; max-height: 280px; margin-top: 2px; }
 .dd__menu.is-up { top: auto; bottom: 100%; margin: 0 0 2px; }
 @media (prefers-reduced-motion: reduce) { .dd__btn, .dd__btn .i { transition: none; } }
 .clock-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--surface-250); }
-.clock-dialog__manual { margin-right: auto; padding: 0 12px 0 10px; color: var(--ink); }
-.clock-dialog__manual:hover { background: var(--surface-150); }
-.clock-dialog__manual .i { width: 16px; height: 16px; }
 
 /* Search behaviour, from the Figma text field Input (625:503609), Left_icon type.
    Rest/filled: leading icon Ink 650. Focused: icon orange, Primary 100 border, caret. Disabled: icon and text Ink 400. */
@@ -501,11 +542,10 @@
 .round-btn--break:hover { filter: brightness(.95); }
 .round-btn--warn { color: var(--orange, #F27D2C); border: 1px solid currentColor; }
 .round-btn--warn:hover { background: var(--surface-100); }
-.topbar__sep { width: 1px; height: 40px; background: var(--surface-250); flex: none; }
 [data-clock="in"] .clockctl, [data-clock="break"] .clockctl { display: none; }
 [data-clock="in"] #topClockBtn, [data-clock="break"] #topClockBtn { display: none; }
 [data-clock="in"] .topbar__last, [data-clock="break"] .topbar__last { display: none; }
-@media (max-width: 720px) { .topbar__sep { display: none; } .clockrun__time { margin-right: 0; } }
+@media (max-width: 720px) { .clockrun__time { margin-right: 0; } }
 
 .round-btn--break, .round-btn--warn { transition: background-color .15s, color .15s, transform .1s, filter .15s; }
 
@@ -514,3 +554,14 @@ body:not([data-clock]) .topbar__right { visibility: hidden; }
 
 /* Reserve the scrollbar gutter so the top bar and content keep the same width on pages with and without a scrollbar. */
 html { scrollbar-gutter: stable; }
+/* Dropdown field: clear (x) sits inside the field, left of the chevron; search + list live in the menu */
+.dd__clear { position: absolute; right: 32px; bottom: 10px; display: grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-subtle); cursor: pointer; }
+.dd__clear[hidden] { display: none; }
+.dd__clear:hover { color: var(--ink); }
+.dd__clear:focus-visible { box-shadow: var(--focus-ring); }
+.dd__menu { overflow: auto; }
+.dd__list .menu__opt[hidden] { display: none; }
+.menu__foot button:disabled { color: var(--ink-subtle); cursor: default; background: none; }
+/* Fixed height so picking or clearing a chip value never resizes the field */
+.dd__btn { height: 36px; padding-block: 0; box-sizing: border-box; }
+.clock-dialog .dd__btn { height: 40px; }

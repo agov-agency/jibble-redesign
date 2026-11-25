@@ -38,6 +38,7 @@ const colorOf = scaleOrdinal({ domain: SERIES.map(s => s.key), range: SERIES.map
 const PLOT_H = 220;
 const MARGIN = { top: 8, left: 44, bottom: 28 };
 const SEG_GAP = 2;
+const MIN_SEG_H = 2;
 const tickText = { fontSize: 12, fontWeight: 300, fontFamily: "inherit", fill: "var(--ink-muted)" };
 
 // Centred above the point, kept inside the viewport and below the top bar.
@@ -63,7 +64,7 @@ function HoursChart({ width, cols, ticks, top, period, version }) {
   const innerW = Math.max(0, width - MARGIN.left);
   const x = scaleBand({ domain: cols.map((_, i) => i), range: [0, innerW], paddingInner: Math.min(0.3, 2 / Math.max(1, innerW / cols.length)) });
   const y = scaleLinear({ domain: [0, top], range: [PLOT_H, 0] });
-  const barW = Math.min(20, x.bandwidth() * 0.7);
+  const barW = x.bandwidth() * 0.6;
   const dense = cols.length > 20;
   const series = period === "day" ? SERIES.slice(0, 2) : SERIES;
   const stackData = cols.map((c, i) => ({ i, ...Object.fromEntries(SERIES.map(s => [s.key, s.value(c)])) }));
@@ -95,11 +96,14 @@ function HoursChart({ width, cols, ticks, top, period, version }) {
               <g key={`${version}-${i}`} className="chart__stack" style={{ animationDelay: `${i * 18}ms` }} pointerEvents="none">
                 {stacks.filter(s => series.some(x => x.key === s.key)).map(stack => {
                   const bar = stack.bars[i];
-                  const h = Math.max(0, bar.height - (stack.index > 0 ? SEG_GAP : 0));
-                  if (h <= 0.5) return null;
+                  if (bar.height <= 0.01) return null;
+                  // Any non-zero segment stays visible, even when its share is under a pixel.
+                  const gap = stack.index > 0 ? SEG_GAP : 0;
+                  const h = Math.max(MIN_SEG_H, bar.height - gap);
+                  const top = bar.y + bar.height - gap - h; // anchor the bottom edge so a clamped segment grows upward, keeping the gap
                   return (
-                    <BarRounded key={stack.key} all radius={Math.min(2, h / 2)}
-                      x={bar.x + (bar.width - barW) / 2} y={bar.y} width={barW} height={h} fill={bar.color} />
+                    <BarRounded key={stack.key} className={`hseg hseg--${stack.key}`} all radius={Math.min(2, h / 2)}
+                      x={bar.x + (bar.width - barW) / 2} y={top} width={barW} height={h} fill={bar.color} />
                   );
                 })}
               </g>
@@ -118,9 +122,11 @@ function HoursChart({ width, cols, ticks, top, period, version }) {
       {tooltipOpen && tooltipData && createPortal(
         <ChartTip x={tooltipLeft} y={tooltipTop}>
           <b>{tooltipData.title}</b>
-          {series.map(s => (
-            <span key={s.key}><i style={{ background: s.color }} />{s.label} {fmtHText(s.key === "worked" ? tooltipData.worked : tooltipData[s.key])}</span>
-          ))}
+          {series.map(s => ({ s, t: fmtHText(s.key === "worked" ? tooltipData.worked : tooltipData[s.key]) }))
+            .filter(({ t }) => t !== fmtHText(0))
+            .map(({ s, t }) => (
+              <span key={s.key}><i style={{ background: s.color }} />{s.label} {t}</span>
+            ))}
         </ChartTip>, document.body)}
     </div>
   );
@@ -170,13 +176,17 @@ function BreakdownBars({ width, rows, total, version }) {
         const labelW = Math.min(getStringWidth(r.name, labelFont) ?? 0, maxLabel);
         // Every fill is at least as wide as its label, so the name always sits inside its colour.
         const fillW = Math.min(width, Math.max(x(r.hrs), labelW + 28));
+        const clipId = `fill-${version}-${width}-${r.id}`;
         return (
           <Group key={r.id} top={y(r.id)} role="listitem" aria-label={`${r.name}: ${pct.toFixed(1)}%, ${fmtHText(r.hrs)}`}>
             <BarRounded all radius={BAR_H / 2} x={0} y={0} width={width} height={BAR_H} className="bar__track" />
             <BarRounded key={version} all radius={BAR_H / 2} x={0} y={0} width={fillW} height={BAR_H} fill={r.color}
               className="bar__fill" style={{ animationDelay: `${i * 30}ms` }} />
             <text x={PAD} y={BAR_H / 2} className="bar__label" clipPath={`url(#lbl-${version}-${width})`}>{r.name}</text>
+            {/* Ink on the track; a white copy clipped to the fill keeps it legible where the two overlap. */}
             <text x={width - PAD} y={BAR_H / 2} className="bar__pct" textAnchor="end">{pct.toFixed(1)}%</text>
+            <clipPath id={clipId}><rect width={fillW} height={BAR_H} /></clipPath>
+            <text x={width - PAD} y={BAR_H / 2} className="bar__pct is-on-fill" textAnchor="end" clipPath={`url(#${clipId})`} aria-hidden="true">{pct.toFixed(1)}%</text>
             <text x={PAD} y={BAR_H + 6 + 6} className="bar__hrs">{fmtHText(r.hrs)}</text>
           </Group>
         );

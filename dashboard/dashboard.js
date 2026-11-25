@@ -25,9 +25,9 @@
 
   // ---------- Data ----------
   const LOCATIONS = [
-    { id: "main", name: "NY Main Office", addr: "9513 Delaware St, Astoria, NY 11106", x: 47, y: 52 },
-    { id: "east", name: "NY East Office", addr: "9250 Jackson Ave, Brooklyn, NY 11213", x: 71, y: 34 },
-    { id: "post", name: "NY Post", addr: "148 SW Bohemia St, Staten Island, NY 10301", x: 27, y: 74 },
+    { id: "main", name: "NY Main Office", addr: "9513 Delaware St, Astoria, NY 11106", lat: 40.7704, lng: -73.93 },
+    { id: "east", name: "NY East Office", addr: "9250 Jackson Ave, Brooklyn, NY 11213", lat: 40.6702, lng: -73.9342 },
+    { id: "post", name: "NY Post", addr: "148 SW Bohemia St, Staten Island, NY 10301", lat: 40.6435, lng: -74.0776 },
     { id: "remote", name: "Remote", addr: "No fixed address" },
   ];
   const GROUPS = [
@@ -221,7 +221,7 @@
     const card = $(".clock");
     card.dataset.state = st;
     document.body.dataset.clock = st;
-    $("#activityLabel").textContent = ACTIVITIES.find(item => item.id === state.activity)?.name ?? "No activity";
+    { const A = ACTIVITIES.find(item => item.id === state.activity); $("#activityLabel").textContent = A?.name ?? "No activity"; $("#activityBtn").style.setProperty("--chip", A?.color ?? "var(--ap-none)"); }
     $("#projectLabel").textContent = PROJECTS.find(item => item.id === state.project)?.name ?? "No project";
     for (const selector of ["#activityBtn", "#projectBtn"]) {
       $(selector).setAttribute("aria-haspopup", st === "out" ? "listbox" : "dialog");
@@ -332,6 +332,7 @@
     openClockPanel(act, nowMin(), prevAct, prevProj, last?.end ?? last?.start ?? 0);
   }
   function commitClock(act, fields) {
+    if (act === "hours") return; /* manual hours are stored on the timesheet; nothing to change on the clock */
     const last = state.entries.at(-1);
     const n = Math.max(fields?.time ?? nowMin(), last?.end ?? last?.start ?? 0);
     if (last && last.end == null) last.end = n;
@@ -360,12 +361,27 @@
     const rail = $(".rail"), list = $("#memberList");
     rail.style.setProperty("--rail-list-top", `${$(".search").offsetTop + $(".search").offsetHeight + 4}px`);
   }
+  // Keep the sticky rail pinned: near the end of the page it shrinks instead of being pushed up.
+  function fitRail() {
+    const rail = $(".rail");
+    if (!rail) return;
+    if (getComputedStyle(rail).position !== "sticky") { rail.style.height = ""; rail.style.minHeight = ""; return; }
+    const top = parseFloat(getComputedStyle(rail).top) || 0;
+    const full = window.innerHeight - top - 16;
+    const room = rail.parentElement.getBoundingClientRect().bottom - top;
+    const h = Math.max(160, Math.min(full, room));
+    rail.style.minHeight = "0";
+    rail.style.height = `${h}px`;
+  }
+  let railRaf = 0;
+  window.addEventListener("scroll", () => { cancelAnimationFrame(railRaf); railRaf = requestAnimationFrame(fitRail); }, { passive: true });
+  window.addEventListener("resize", fitRail);
   function renderRail(members) {
     const by = s => members.filter(m => m.status === s);
     $("#nIn").textContent = by("in").length;
     $("#nBreak").textContent = by("break").length;
     $("#nOut").textContent = by("out").length;
-    $("#railCount").textContent = `${members.length} member${members.length === 1 ? "" : "s"}`;
+    $("#railCount").textContent = `(${members.length} member${members.length === 1 ? "" : "s"})`;
     document.querySelectorAll("#countTabs .counts__tab").forEach(t => {
       const on = t.dataset.status === state.railStatus;
       t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1;
@@ -464,38 +480,20 @@
       && (!state.filters.schedules.size || state.filters.schedules.has(m.sched)));
     const counts = id => { const ms = scoped.filter(m => m.loc === id); return ["in", "break", "out"].map(s => ms.filter(m => m.status === s).length); };
 
-    const map = $("#map");
-    if (!map.querySelector("svg")) map.insertAdjacentHTML("afterbegin", MAP_SVG);
-    map.querySelectorAll(".map__pin").forEach(p => p.remove());
-    LOCATIONS.filter(l => l.x != null).forEach(l => {
+    const lab = { in: "Clocked in", break: "On break", out: "Clocked out" };
+    const pins = LOCATIONS.filter(l => l.lat != null).map(l => {
+      const ms = scoped.filter(m => m.loc === l.id), by = s => ms.filter(m => m.status === s);
       const [i, b] = counts(l.id);
-      const tone = i ? "in" : b ? "break" : "out";
-      const p = el("span", "map__pin");
-      p.dataset.tone = tone; p.dataset.loc = l.id;
-      p.style.left = l.x + "%"; p.style.top = l.y + "%";
-      p.setAttribute("aria-label", `${l.name} on map: ${i} in, ${b} on break`);
-      p.innerHTML = `<span class="map__name">${esc(l.name)}</span>`;
-      map.append(p);
+      return {
+        id: l.id, name: l.name, lat: l.lat, lng: l.lng, tone: i ? "in" : b ? "break" : "out",
+        label: `${l.name} on map: ${i} in, ${b} on break`,
+        popup: `<strong>${esc(l.name)}</strong><p class="map__pop-addr">${esc(l.addr)}</p>`
+          + (ms.length ? ["in", "break", "out"].filter(s => by(s).length).map(s => `<div class="map__pop-grp"><span class="map__pop-lbl" data-tone="${s}">${lab[s]} · ${by(s).length}</span>${by(s).map(m => `<span class="map__pop-who">${esc(m.name)}</span>`).join("")}</div>`).join("") : `<p class="map__pop-addr">No members here</p>`),
+      };
     });
+    window.__mapPins = pins;
+    window.dispatchEvent(new Event("jb-map-pins"));
   }
-  // Illustrative map: land, a river and bay, a road grid. No map provider.
-  const MAP_SVG = `<svg viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <rect width="1000" height="360" fill="#F7F7F6"/>
-    <path d="M0 250 C120 230 180 300 300 290 S470 330 560 360 L0 360Z" fill="#EDEDEB"/>
-    <path d="M380 0 C400 70 360 120 420 170 S560 220 560 360 L600 360 C600 230 470 190 455 150 S440 60 430 0Z" fill="#EDEDEB"/>
-    <path d="M700 360 C740 300 860 290 1000 310 L1000 360Z" fill="#EDEDEB"/>
-    <g fill="#F2F2F1"><rect x="610" y="60" width="90" height="60" rx="6"/><rect x="150" y="70" width="70" height="90" rx="6"/><rect x="820" y="170" width="80" height="50" rx="6"/></g>
-    <g stroke="#FFFFFF" stroke-width="10" fill="none" stroke-linecap="round">
-      <path d="M0 140 C200 120 300 160 470 140 S800 90 1000 120"/>
-      <path d="M520 0 C540 120 650 200 1000 230"/>
-      <path d="M0 40 C150 60 260 30 380 50"/>
-      <path d="M180 360 C200 260 160 180 230 0"/>
-    </g>
-    <g stroke="#FFFFFF" stroke-width="4" fill="none">
-      <path d="M0 200 H360 M600 180 H1000 M0 90 H380 M480 60 H1000 M620 270 H1000 M60 0 V230 M300 0 V250 M660 0 V300 M760 0 V280 M880 0 V300 M960 0 V300"/>
-      <path d="M90 300 L240 210 M700 40 L980 190 M520 300 L640 210"/>
-    </g>
-  </svg><span class="map__note">Illustrative map</span>`;
 
   // ---------- Filters ----------
   const FILTERS = {
@@ -658,7 +656,7 @@
     renderUpcoming(members);
     renderLocations(members);
     $("#rangeLabel").textContent = RANGE[state.period];
-    placeRailList();
+    placeRailList(); fitRail();
   }
 
   // ---------- Wire up ----------

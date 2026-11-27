@@ -31,6 +31,7 @@
     <symbol id="i-tag" viewBox="0 0 20 20"><path d="M3.5 3.5h6l7 7-6 6-7-7z"/><circle cx="7" cy="7" r="1"/></symbol>
     <symbol id="i-org" viewBox="0 0 20 20"><path d="M4 17V5.5L10 3l6 2.5V17"/><path d="M2.5 17h15M8 8h1M11 8h1M8 11h1M11 11h1M9 17v-3h2v3"/></symbol>
     <symbol id="i-plug" viewBox="0 0 20 20"><path d="M7.5 3v3.5M12.5 3v3.5M5.5 6.5h9v3a4.5 4.5 0 0 1-9 0z"/><path d="M10 14v3"/></symbol>
+    <symbol id="i-info" viewBox="0 0 20 20"><circle cx="10" cy="10" r="7"/><path d="M10 9v4.5M10 6.5v.01"/></symbol>
     <symbol id="i-chevron-down" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4"/></symbol>
     <symbol id="i-chevron-up" viewBox="0 0 20 20"><path d="M6 12l4-4 4 4"/></symbol>
     <symbol id="i-chevron-left" viewBox="0 0 20 20"><path d="M12 5l-5 5 5 5"/></symbol>
@@ -64,6 +65,10 @@
     <symbol id="i-receipt" viewBox="0 0 20 20"><path d="M5 3h10v14l-2-1.2-1.7 1.2L10 15.8 8.7 17 7 15.8 5 17z"/><path d="M8 7h4M8 10h4"/></symbol>
     <symbol id="i-image" viewBox="0 0 20 20"><rect x="3" y="4" width="14" height="12" rx="1.5"/><circle cx="7.5" cy="8" r="1.3"/><path d="M3.5 14l4-3.5 3 2.5 2.5-2 3.5 3"/></symbol>
     <symbol id="i-switch" viewBox="0 0 20 20"><path d="M4 7h11M12 4l3 3-3 3M16 13H5M8 10l-3 3 3 3"/></symbol>
+    <symbol id="i-palm" viewBox="0 0 20 20"><path d="M10 9.5c-.4 3 .1 5.6 1.2 7.5M10 9.5C8.6 6.6 5.6 5.6 3 6.8c2.5.2 4.8 1.2 7 2.7zM10 9.5c1.4-2.9 4.4-3.9 7-2.7-2.5.2-4.8 1.2-7 2.7zM10 9.5C9.4 6.3 7.2 4.4 4.5 4c1.9 1.4 3.9 3.3 5.5 5.5zM10 9.5c.6-3.2 2.8-5.1 5.5-5.5-1.9 1.4-3.9 3.3-5.5 5.5z"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 20 20"><path d="M15.5 12.2A6 6 0 0 1 7.8 4.5a6 6 0 1 0 7.7 7.7z"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 20 20"><path d="M5 17V3.5M5 4h9l-2 3.5 2 3.5H5"/></symbol>
+    <symbol id="i-umbrella" viewBox="0 0 20 20"><path d="M3 10a7 7 0 0 1 14 0zM10 10v5.5a1.5 1.5 0 0 1-3 0M10 3v.5"/></symbol>
     <symbol id="i-pause" viewBox="0 0 20 20"><path d="M7.5 4.5v11M12.5 4.5v11"/></symbol>
   </defs>
 </svg>
@@ -122,6 +127,11 @@
         <!-- Member detail -->
         <div class="detail-nav" id="detailNav" hidden>
           <a class="round-btn round-btn--outline" id="backBtn" href="#/overview" aria-label="Back to timesheets" title="Back to timesheets"><svg class="i" aria-hidden="true"><use href="#i-arrow-left"/></svg></a>
+          <div class="tabs" role="tablist" aria-label="Member timesheet" id="detailTabs">
+            <button role="tab" class="tabs__tab" id="dtEntries" data-tab="entries" aria-controls="panelEntries" aria-selected="true">Time entries</button>
+            <button role="tab" class="tabs__tab" id="dtPayroll" data-tab="payroll" aria-controls="panelPayroll" aria-selected="false" tabindex="-1">Payroll</button>
+            <button role="tab" class="tabs__tab" id="dtShots" data-tab="screenshots" aria-controls="panelShots" aria-selected="false" tabindex="-1">Screenshots</button>
+          </div>
         </div>
       </div>
 
@@ -135,7 +145,6 @@
         <div class="seg scope-switch" role="radiogroup" aria-label="Members shown" id="scopeSeg">
           <button role="radio" class="seg__opt" aria-checked="true" data-scope="org">Organization</button>
           <button role="radio" class="seg__opt" aria-checked="false" data-scope="managed" tabindex="-1">Managed by me</button>
-          <button role="radio" class="seg__opt" aria-checked="false" data-scope="personal" tabindex="-1">Personal</button>
         </div>
         <div class="bar">
           <div class="bar__group">
@@ -150,17 +159,16 @@
             <div class="stepper">
               <button class="round-btn round-btn--outline round-btn--36" id="prevBtn" aria-label="Previous week"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
               <div class="filter">
-                <button class="filter__btn" id="rangeBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="calMenu"><span id="rangeLabel">16 Nov – 22 Nov</span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
-                <div class="menu menu--cal" id="calMenu" role="dialog" aria-label="Choose dates" hidden></div>
+                <button type="button" class="filter__btn" id="rangeBtn"><span id="rangeLabel">16 Nov – 22 Nov</span><svg class="i i-16" aria-hidden="true"><use href="#i-calendar"/></svg></button>
               </div>
               <button class="round-btn round-btn--outline round-btn--36" id="nextBtn" aria-label="Next week"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
-            <button class="link-btn" id="todayBtn" hidden>Today</button>
+            <div class="reveal is-hidden" id="todayWrap" inert><div><button class="btn btn--outlined btn--36" id="todayBtn">Today</button></div></div>
           </div>
           <div class="bar__group">
             <div class="filter" id="legendWrap" hidden>
-              <button class="btn btn--outlined btn--36" id="legendBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="legendMenu">Legend<svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
-              <div class="menu menu--legend is-right" id="legendMenu" role="dialog" aria-label="Legend" hidden></div>
+              <button class="btn btn--outlined btn--36" id="legendBtn" aria-expanded="false" aria-controls="legendMenu"><svg class="i i-16" aria-hidden="true"><use href="#i-info"/></svg>Legend</button>
+              <div class="menu menu--legend is-right" id="legendMenu" role="region" aria-label="Legend" hidden></div>
             </div>
             <button class="btn btn--outlined btn--36" id="exportBtn" aria-haspopup="dialog"><svg class="i i-16" aria-hidden="true"><use href="#i-download"/></svg>Export</button>
           </div>
@@ -178,8 +186,8 @@
             <div class="menu" id="statusMenu" role="dialog" aria-label="Statuses" hidden></div>
           </div>
           <div class="filter">
-            <button class="filter__btn filter__btn--add" id="addFilterBtn" aria-haspopup="true" aria-expanded="false" aria-controls="addFilterMenu"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg><span>Add filter</span></button>
-            <div class="menu" id="addFilterMenu" role="group" aria-label="Add filter" hidden></div>
+            <button class="filter__btn filter__btn--add" id="addFilterBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="addFilterMenu"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg><span>More filters</span></button>
+            <div class="menu is-right" id="addFilterMenu" role="dialog" aria-label="More filters" hidden></div>
           </div>
           <button class="link-btn" id="clearAll" hidden>Clear filters</button>
         </div>
@@ -214,7 +222,6 @@
       <section id="viewApprovals" class="view" role="tabpanel" aria-labelledby="tabApprovals" hidden>
         <h1 class="sr-only">Approvals</h1>
         <div id="apMain">
-          <div id="apScopeSlot"></div>
           <div class="bar">
             <div class="bar__group">
               <div class="stepper">
@@ -222,16 +229,10 @@
                 <span class="period-label" id="apRange" aria-live="polite"></span>
                 <button class="round-btn round-btn--outline round-btn--36" id="apNext" aria-label="Next pay period"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
               </div>
-              <button class="link-btn" id="apCurrent" hidden>Current period</button>
+              <div class="reveal is-hidden" id="apCurrentWrap" inert><div><button class="btn btn--outlined btn--36" id="apCurrent">This week</button></div></div>
             </div>
-            <p class="bar__note" id="apNote" hidden>This pay period is in progress. It can be approved once it ends.</p>
           </div>
           <div id="apFilterSlot"></div>
-          <div class="ap-bulk" id="apBulk" role="region" aria-label="Selection" hidden>
-            <span id="apBulkCount" aria-live="polite"></span>
-            <button class="btn btn--ink btn--36" id="apBulkApprove"><svg class="i i-16" aria-hidden="true"><use href="#i-check"/></svg>Approve selected</button>
-            <button class="link-btn" id="apBulkClear">Clear selection</button>
-          </div>
           <div class="grid-wrap" id="apGridWrap" tabindex="0" role="region" aria-label="Approvals table">
             <table class="grid grid--ap" id="apGrid">
               <colgroup><col class="col-check"><col class="col-member"><col><col><col><col><col><col class="col-act"></colgroup>
@@ -240,6 +241,11 @@
             </table>
           </div>
           <p class="grid-empty" id="apEmpty" hidden></p>
+          <div class="ap-bulk" id="apBulk" role="region" aria-label="Selection" hidden>
+            <button type="button" class="ap-bulk__count" id="apBulkCount" title="Clear selection"><span id="apBulkCountText" aria-live="polite"></span><svg class="i i-16" aria-hidden="true"><use href="#i-x"/></svg></button>
+            <button class="btn btn--outlined btn--36" id="apBulkReopen" hidden><svg class="i i-16" aria-hidden="true"><use href="#i-history"/></svg><span id="apBulkReopenLbl">Reopen</span></button>
+            <button class="btn btn--positive btn--36" id="apBulkApprove"><svg class="i i-16" aria-hidden="true"><use href="#i-check"/></svg><span id="apBulkApproveLbl">Approve</span></button>
+          </div>
         </div>
         <div class="state" id="apNone" hidden>
           <svg class="state__art" viewBox="0 0 120 96" aria-hidden="true">
@@ -268,7 +274,10 @@
               </div>
               <button class="round-btn round-btn--outline round-btn--36" id="dNext" aria-label="Next week"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
-            <button class="btn btn--outlined" id="addTimeBtn"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add manual time</button>
+            <div class="bar__group">
+              <button class="btn btn--outlined btn--36" id="historyBtn" aria-haspopup="dialog"><svg class="i i-16" aria-hidden="true"><use href="#i-history"/></svg>Change history<span class="count-pill" id="historyCount"></span></button>
+              <button class="btn btn--ink btn--36" id="addTimeBtn"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add manual time</button>
+            </div>
           </div>
 
           <div class="detail__controls" id="detailControls"></div>
@@ -276,8 +285,7 @@
           <div id="panelEntries" class="detail__panel" role="tabpanel" aria-labelledby="dtEntries">
             <div class="days" role="tablist" aria-label="Day" id="days"></div>
             <div id="dayPanel" role="tabpanel" tabindex="-1">
-              <div class="tz-row"><button class="link-btn" id="allTzBtn" aria-pressed="false">View all timezones</button></div>
-              <ul class="entries" id="entries" aria-label="Time entries"></ul>
+              <div class="entries" id="entries"></div>
             </div>
             <div class="accs" id="accs"></div>
           </div>
@@ -344,6 +352,15 @@
     <button class="btn btn--outlined" data-close>Cancel</button>
     <button class="btn btn--ink" id="exportGo" form="exportForm" type="submit"><svg class="i i-16" aria-hidden="true"><use href="#i-download"/></svg>Export</button>
   </footer>
+</aside>
+
+<!-- Change history drawer -->
+<aside class="drawer" id="historyDrawer" role="dialog" aria-modal="true" aria-labelledby="historyTitle" hidden>
+  <header class="drawer__head">
+    <h2 class="drawer__title" id="historyTitle">Change history</h2>
+    <button type="button" class="round-btn drawer__close" data-close aria-label="Close panel"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+  </header>
+  <div class="drawer__body" id="historyBody"></div>
 </aside>
 
 <!-- Add / edit time entry drawer -->

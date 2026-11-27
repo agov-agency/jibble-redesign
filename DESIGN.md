@@ -126,7 +126,7 @@ typography:
     letterSpacing: "-0.01em"
   label-3-slim:
     fontFamily: "PolySans Slim"
-    fontSize: "10px"
+    fontSize: "12px"
     fontWeight: 300
     lineHeight: "16px"
     letterSpacing: "0em"
@@ -256,6 +256,8 @@ Any of these can be added later if a screen needs it.
 | `label-1-slim` | Label/L1 Slim | 14 / 18 | -1% | 300 | label/value rows in the summary card; very widely used elsewhere |
 | `label-2-slim` | Label/L2 Slim | 12 / 12 | -1% | 300 | small labels in the summary card |
 
+✅ **Minimum font size: 12px.** No text in the product goes below 12px: labels, chips, badges, chart axes, ruler ticks and third-party UI overrides included. A smaller size is used only when the user explicitly asks for it on a specific element. Figma values under 12px (for example 10px or 11px) are raised to 12px in code. (User decision, 2026-11-26.)
+
 ❓ Line height 12 on 12px text (Label 2) leaves no leading. It is the Figma value and is recorded as is, but wrapping or multi-line use needs checking in code.
 
 ### Hierarchy ✅
@@ -267,7 +269,7 @@ Any of these can be added later if a screen needs it.
 - **Body 1** (400, 14/20; `body-1-slim` 300): table and list text.
 - **Body 2** (400, 12/16; `body-2-slim` 300): secondary text.
 - **Label 1 / 2** (400, 14/18 and 12/12; `label-1-slim` and `label-2-slim` 300): controls, chips, table headers, label/value rows.
-- **Label 3 Slim** (`label-3-slim`, 300, 10/16, tracking 0): smallest annotation, such as time-axis labels.
+- **Label 3 Slim** (`label-3-slim`, 300, 12/16, tracking 0): smallest annotation, such as time-axis labels. Raised from the Figma 10px by the 12px minimum.
 - **Button 1** (400, 14/18): all buttons.
 
 ✅ Slim is not a rare, low-emphasis style. Across the three concept surfaces it appears on 192 text layers at 14px (against 149 in Neutral) and on 53 at 12px (against 143 in Neutral).
@@ -369,6 +371,10 @@ Reusable components, independent of the screen they first appeared on. **Status 
 
 ### Buttons
 - ✅ Types: Outlined (text, icon, left-icon), Ghost (text, icon), Filled (text, icon), plus the Tracker Button (Clock in, Resume, Members Board).
+- ✅ Positive: `.btn--positive` (`shared/components.css`), filled `--green-text` with white text (AA), for Approve actions.
+- ✅ Shortcut buttons (the label follows the period: Today, This week, This month) are outlined `btn--outlined btn--36`, not link buttons. They slide in with the `.reveal` wrapper (`.is-hidden` collapses it) and respect reduced motion.
+- ✅ Reopen is an outlined button with a history icon. In the Approvals table, row actions are icon-only 36px squares (`.btn--icon` in `timesheets/timesheets.css`): Approve is `btn--positive btn--icon` (check), Reopen is `btn--outlined btn--icon` (history), each with `aria-label` and `title`.
+- ✅ Primary add actions (Add manual time, Add time off on this day) are `btn btn--ink btn--36` with a 16px plus icon. Secondary actions beside them, such as Change history, are `btn btn--outlined btn--36`.
 - ✅ Sizes: Default and Small. Small ghost icon is 20px; Default is 28px.
 - ✅ "Filled / Outlined Ultimate" exist for upsell only.
 
@@ -379,7 +385,10 @@ Reusable components, independent of the screen they first appeared on. **Status 
 ✅ Weekly member table:
 - member cell (avatar, name, role);
 - sortable day headers (with today and rest-day markers);
-- a total column;
+- a total column (14px text, like day cells);
+- no row hover on Timesheets, only the day cell; Approvals rows hover as a whole, member cell included;
+- chips (Rest day, leave, holiday, ongoing) are not anchored to the cell top: tag and hours form one vertically centred stack;
+- the day-header sort icon hangs off the label so the day and date stay centred; it sits inside the hover fill (30px reserved right padding, offset by a negative margin);
 - cell types: text, chip, avatar, ongoing, empty, text and chip.
 
 🧪 The table should generalize beyond Timesheets.
@@ -391,7 +400,7 @@ Reusable components, independent of the screen they first appeared on. **Status 
 ✅ Sidebar menu tabs and a collapsible settings group, top-bar page tabs, segmented tabs (light and dark), and calendar day tabs.
 
 ### Filters and dropdowns
-✅ A filter family (multi-select, single select, date with date picker, schedules, tracked hours, add filter) built on one Dropdown family: selector, list item, search, multi-select list, field. The parts are specified in Selects, Inputs and Search below.
+✅ A filter family (multi-select, single select, date with date picker, schedules, tracked hours, More filters, a ghost button with no border and a hover fill, not dashed) built on one Dropdown family: selector, list item, search, multi-select list, field. The parts are specified in Selects, Inputs and Search below.
 
 ### Selects
 Read from Figma on 2026-11-18. ✅ unless tagged otherwise. All text is **Label/L1 Slim** (14/18, `label-1-slim`) in Ink (`#070717`), radius 4, borders 1px.
@@ -452,7 +461,7 @@ Read from Figma on 2026-11-18. ✅ unless tagged otherwise. All text is **Label/
 - **Open and has a value:** Primary 100 border, label and chevron in `--primary-text` (`#C24C00`, new token). Open also flips the chevron up; that's the only difference between the two states.
 - **Count chip:** a `--primary-text` fill.
 - **Menu:** radius 4, padding 4, Dropdown shadow. Rows follow the List Item specs. A selected single-select row gets Support 100 and an Ink check.
-- **Footer:** a full-width row with a top border. Multi-Select filter menus have "Clear selection" only, as in Figma; choices apply as you tick them, and the menu closes on Escape or a click outside. The hours filter keeps "Apply" on the right, because its values apply only on Apply.
+- **Footer:** a full-width row with a top border. Multi-Select filter menus have "Clear selection" only, as in Figma; choices apply as you tick them, and the menu closes on Escape or a click outside. The hours filter and the More filters menu keep "Apply" on the right (More filters: a single right-aligned action, `.menu__foot--end`), because their values apply only on Apply.
 - **In-menu search:** follows Dropdown / Search exactly (see Search below). The 2px orange focus underline used earlier is gone: focus shows only the orange caret, as in Figma.
 - **Unchanged:** the account menu keeps its 8px radius, and the pagination size select keeps an Ink value when open.
 - **Dashboard filters (2026-11-18).** ✅ The Locations, Groups and Schedules menus now follow **Dropdown, Multi-Select** (`673:511845`):
@@ -516,7 +525,7 @@ Decided in code:
 - **Keyboard:** arrows move by day (±1) and week (±7), PageUp/PageDown change month, Escape closes and returns focus to the field. Outside days stay clickable and jump to that date.
 - **Opens from a Select-style field:** 36px tall, Support 250 border, label left, 16px calendar icon right. The card opens 2px below it, or above when there is no room.
 
-🧪 Built as `shared/date-picker.js` (`createDatePicker`) with styles in `shared/shell.css`. Used in the clock panel's date field.
+🧪 Built as `shared/date-picker.js` (`createDatePicker`) with styles in `shared/shell.css`. Used in the clock panel's date field and the Timesheets overview range button (`#rangeBtn`).
 
 ### Search
 ✅ Read from Figma on 2026-11-18.
@@ -599,8 +608,12 @@ What changed:
 ### Time entry row
 ✅ Avatar, time, type chip, platform flag (mobile, web, browser extension, kiosk, desktop, message), contextual flags (offline, location, face recognition, break violation, auto clock-out, manual), activity and project chips, note, duration, edit and delete; a Deleted state.
 
+✅ In member detail the entries are a table: Time, Type (with source flags), Activity, Project, Note, Duration. Edit and delete float over the Note cell on hover.
+
+✅ **Data rule:** two clock ins are never consecutive. After a clock in comes a break or a clock out (generator and entry form validation).
+
 ### Accordions
-✅ Header plus rows; used for tracked hours, payroll hours and change history.
+✅ Header plus rows. Used in other places, but no longer for Timesheets member detail (tracked hours is a `.tcard`, the Payroll tab table is a `.tcard`, change history is a drawer).
 
 ### Time-of-day timeline
 ✅ In the concept it's built from plain shapes, not a library component:
@@ -681,11 +694,17 @@ Screen-level questions are in the surface briefs. Decisions already made are rec
 Timesheets (`timesheets/`) and Dashboard (`dashboard/`) are built. Their shared shell and controls now live in `shared/shell.css`: sidebar, top bar, tabs, clock control, buttons, segmented control, filter pills, menus. Tokens are in `shared/tokens.css`. Status of these components: **In code**, under review.
 
 New in code with Timesheets (gaps designed from the concept language):
-- **Weekly member table.** A real `<table>` with sortable headers (`aria-sort`). Day cells are links into the member's day. Rest day and leave chips are anchored at the top of the cell, with hours centred below. Member and Total columns are pinned, with scroll shadows. Member 302→240px, Total 140→100px, day floor 112px.
+- **Weekly member table.** A real `<table>` with sortable headers (`aria-sort`). Day cells are links into the member's day. Member names in grids do not underline on hover. Chips and hours form one vertically centred stack in the cell; only the day cell has hover. Member and Total columns are pinned, with scroll shadows. Member 302→240px, Total 140→100px, day floor 112px. The pager (`shared/components.css`) hides the page buttons when there is one page, and the page-size control stays right (`.pager__size`, `margin-left:auto`). The Approvals action column is 148px so Reopen keeps 24px right padding.
+- **Scope switch and period controls.** Organization / Managed by me sits in the same row as the period controls on Timesheets and Approvals. "Personal" is removed.
+- **Approvals bulk bar.** A sticky floating pill at the bottom of the viewport. The in-progress note is removed. Padding is 8px all round. The count is a ghost pill button (`.ap-bulk__count`, "18 selected" plus an x icon) that clears the selection; there is no separate "Clear selection" button. Every row has a checkbox; Open, Reopened and Approved rows are selectable, In progress rows get a disabled one. The header select-all is disabled when nothing is selectable; when no row is selectable at all (for example the current week, all In progress), the checkbox column is hidden (`.grid--ap.is-nocheck`). The bar shows "Approve" and/or "Reopen" (outlined, history icon) depending on the selection; a mixed selection labels each with its count ("Approve 18", "Reopen 6") and each acts only on its rows. Disabled checkbox: `.check input:disabled + .box` in `shared/components.css` (--disabled fill, --surface-200 border). The "More filters" menu is right-aligned to its button (`.menu.is-right`, `role=dialog`) and has no "Clear selection" footer. Each extra filter is a checkbox `menu__opt` row (as in multi-select lists); ticks are staged and applied only with the "Apply" footer button (it adds or removes the chips, and unticking clears the filter's values). Closing the menu discards staged ticks. Filters added this way have no remove (x) control, render with a chevron like the others, and are reset by "Clear filters".
+- **Member detail.** Tabs (Time entries / Payroll / Screenshots) are in the top bar. The side panel member header has no border or chevron and aligns with the info groups. Panel text: titles 14px, labels and values 12px, with dividers between info groups. "View all timezones" is removed. Tracked hours is a static card (`.tcard`, no accordion) Payroll hours appear only in the Payroll tab (its table sits in a `.tcard`) and the side panel summary, not on the Time entries tab. Change history is an outlined `btn--36` "Change history" button beside the ink "Add manual time" that opens a drawer (`#historyDrawer`), not an accordion.
+- **Dashboard.** The "Your day" time-of-day timeline is removed from the clock card.
 - **Hover-revealed add action.** Shown on cell hover and on focus-within (Reveal-On-Focus Rule).
+- **Period stepper.** `.stepper` in `shared/components.css`, 4px gap between its controls. The Overview range trigger (`#rangeBtn`) uses the shared `createDatePicker` with a trailing calendar icon; the member detail range (`dRangeBtn`) still uses the older custom `buildCal` popover.
+- **Monthly timesheet grid.** Status tiles, not a heat ramp: `.hm--full` green (8h or more), `.hm--part` yellow (under 8h), `.hm--miss` red (past workday, no time), `.hm--none` empty (today). Rest day, holiday and time off are icon tiles (moon, flag, umbrella); overtime adds a corner dot. Days after today are paler (`.is-future`, opacity .5). The legend matches.
 - **Calendar popover.** The selected period is a grey band, and today has an orange dot.
 - **Hours filter menu.** Exclude options, plus More than / Less than / Between / Equal to, with Clear selection and Apply.
-- **Right-side drawer.** 480px, with scrim, focus trap, and Escape to close; focus returns to the trigger. Used for Export and Add manual time.
+- **Right-side drawer.** 480px, with scrim, focus trap, and Escape to close; focus returns to the trigger. Used for Export, Add manual time and Change history.
 - **Toast.** Deep Ink, with an optional Undo.
 - **Entry row type chip.** Outlined: Clock in green, Break yellow, Clock out grey. Platform and flag icons carry tooltips.
 - **Account and organization menu.** 272px, shared by both pages through `shared/account.js`. Arrow keys move through it, Escape closes it and returns focus, and it stays inside the viewport.

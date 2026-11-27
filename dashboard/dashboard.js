@@ -276,7 +276,6 @@
     rb.className = "round-btn " + (st === "break" ? "round-btn--go" : "round-btn--break");
     rb.setAttribute("aria-label", st === "break" ? "End break" : "Start break");
     rb.title = rb.getAttribute("aria-label");
-    renderTimeline();
   }
   function renderTimer() {
     const st = myStatus();
@@ -298,24 +297,6 @@
     ctl.setAttribute("role", "group");
     ctl.setAttribute("aria-label", `Time clock. ${ctl.title}`);
   }
-  const TL_FROM = 6 * 60, TL_TO = 20 * 60;
-  function renderTimeline() {
-    const pct = v => ((Math.min(Math.max(v, TL_FROM), TL_TO) - TL_FROM) / (TL_TO - TL_FROM)) * 100;
-    const n = nowMin();
-    const t = $("#tlTrack");
-    t.innerHTML = state.entries.map(e => {
-      const end = e.end ?? n;
-      const act = ACTIVITIES.find(a => a.id === (e.act || "meet"))?.name ?? "No activity";
-      const tip = `${e.type === "work" ? `Worked · ${act}` : "Break"} · ${fmtClock(e.start)} – ${e.end == null ? "now" : fmtClock(e.end)}`;
-      return `<span class="tl__seg tl__seg--${e.type}${e.end == null ? " is-live" : ""}" title="${esc([tip, PROJECTS.find(p => p.id === e.project)?.name, e.note, e.outNote].filter(Boolean).join(" · "))}" style="left:${pct(e.start)}%;width:${Math.max(0.3, pct(end) - pct(e.start))}%"></span>`;
-    }).join("") + `<span class="tl__now" style="left:${pct(n)}%"></span>`;
-    t.setAttribute("role", "img");
-    t.setAttribute("aria-label", "Today: " + state.entries.map(e => `${e.type === "work" ? "worked" : "break"} ${fmtClock(e.start)} to ${e.end == null ? "now" : fmtClock(e.end)}`).join(", "));
-    if (!$("#tlRuler").childElementCount) {
-      $("#tlRuler").innerHTML = [6, 8, 10, 12, 14, 16, 18, 20].map(h => `<span style="left:${pct(h * 60)}%">${h === 12 ? "12 pm" : h < 12 ? h + " am" : h - 12 + " pm"}</span>`).join("");
-    }
-  }
-
   const openClockPanel = createClockPanel([{ id: "none", name: "No activity" }, ...ACTIVITIES], PROJECTS, LOCATIONS, commitClock);
   /* The last clock in's activity and project, for Resume. */
   function lastWork() { return state.entries.filter(e => e.type === "work").at(-1); }

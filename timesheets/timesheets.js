@@ -176,7 +176,9 @@
         const x = ev(e.type === "break" ? "break" : "in", e.start, e.act || null, e.project || null, e.note || "", "web");
         x.loc = e.location || "";
         out.push(x);
-        if (e.end != null && list[i + 1]?.start !== e.end) { const o = ev("out", e.end, null, null, e.outNote || "", "web"); o.loc = e.outLocation || ""; out.push(o); }
+        // A clock in is always followed by a break or a clock out, never by another clock in.
+        const next = list[i + 1];
+        if (e.end != null && (next?.start !== e.end || (e.type !== "break" && next?.type !== "break"))) { const o = ev("out", e.end, null, null, e.outNote || "", "web"); o.loc = e.outLocation || ""; out.push(o); }
       });
       return out;
     }
@@ -201,7 +203,6 @@
     const out = [];
     const block1 = short ? target : 110 + r() * 80;
     out.push(ev("in", t, a1, p1, pick(r, NOTES), plat, r));
-    if (!short && r() < 0.45) { const sw = t + Math.round(block1 * (0.4 + r() * 0.3)); out.push(ev("in", sw, a2, p1, pick(r, NOTES), plat, r)); }
     t += Math.round(block1);
     if (!short) {
       const brk = 20 + Math.round(r() * 40);
@@ -209,7 +210,6 @@
       t += brk;
       const block2 = Math.max(60, target - block1);
       out.push(ev("in", t, a2, p2, pick(r, NOTES), plat, r));
-      if (r() < 0.35) out.push(ev("in", t + Math.round(block2 * 0.55), pick(r, ACTIVITIES).id, p2, "", plat, r));
       t += Math.round(block2);
     }
     out.push(ev("out", t, null, null, r() < 0.25 ? pick(r, OUT_NOTES) : "", plat, r));
@@ -302,7 +302,6 @@
     size: store.get("size", 10),
     detail: { mid: "am", day: key(addDays(TODAY, -1)), tab: "entries" },
     tzMode: "theirs",
-    allTz: false,
     open: { tracked: false, payroll: false, history: false },
     activity: savedClock?.activity ?? "meet", project: savedClock?.project ?? "app",
   };
@@ -394,15 +393,10 @@
       let label = def.label;
       if (s.size === 1) label = def.opts().find(o => s.has(o.id))?.name || def.label;
       const count = s.size > 1 ? ` <span class="filter__count">${s.size}</span>` : "";
-      const x = def.extra ? `<span class="filter__x" role="button" tabindex="0" data-remove="${id}" aria-label="Remove ${def.label} filter">${icon("x", "i i-16")}</span>` : icon("chevron-down", "i i-16");
-      return `<div class="filter" data-f="${id}"><button class="filter__btn${s.size ? " is-active" : ""}" aria-haspopup="dialog" aria-expanded="false" aria-label="${esc(def.label)}${s.size ? `: ${s.size} selected` : ""}"><span>${esc(label)}</span>${count}${def.extra ? icon("chevron-down", "i i-16") : x}</button>${def.extra ? x : ""}</div>`;
+      return `<div class="filter" data-f="${id}"><button class="filter__btn${s.size ? " is-active" : ""}" aria-haspopup="dialog" aria-expanded="false" aria-label="${esc(def.label)}${s.size ? `: ${s.size} selected` : ""}"><span>${esc(label)}</span>${count}${icon("chevron-down", "i i-16")}</button></div>`;
     }).join("");
     if (focusedId) wrap.querySelector(`[data-f="${focusedId}"] .filter__btn`)?.focus();
-    const addable = Object.keys(FILTER_DEFS).filter(k => FILTER_DEFS[k].extra && !state.extra.includes(k));
-    $("#addFilterMenu").innerHTML = (addable.length
-      ? addable.map(k => `<button class="menu__opt" data-add="${k}">${esc(FILTER_DEFS[k].label)}</button>`).join("")
-      : `<p class="menu__title">All filters added</p>`)
-      + `<div class="menu__foot"><button type="button" data-clearall>Clear selection</button></div>`;
+    // More filters: each extra filter toggles on and off in place; the menu stays open. Skip rebuilding while open so focus stays put.
     $("#clearAll").hidden = activeFilterCount() === 0 && !state.search;
   }
   const opText = f => ({ more: `> ${f.a}h`, less: `< ${f.a}h`, equal: `= ${f.a}h`, between: `${f.a}–${f.b}h` }[f.op]);
@@ -435,8 +429,8 @@
     const f = state.hourFilters[kind] || {};
     const radio = (op, label) => `<label class="menu__opt menu__opt--radio"><input type="radio" name="op-${kind}" value="${op}" ${f.op === op ? "checked" : ""}><span class="dot"></span><span>${label}</span></label>
       <div class="hrs" data-op="${op}" ${f.op === op ? "" : "hidden"}>${op === "between"
-        ? `<input type="number" min="0" step="0.5" data-a value="${f.op === op ? f.a : ""}" aria-label="From hours"> and <input type="number" min="0" step="0.5" data-b value="${f.op === op ? f.b : ""}" aria-label="To hours"> hours`
-        : `<input type="number" min="0" step="0.5" data-a value="${f.op === op ? f.a : ""}" aria-label="Hours"> hours`}</div>`;
+        ? `<div class="field"><input type="number" min="0" step="0.5" data-a value="${f.op === op ? f.a : ""}" aria-label="From hours"></div> and <div class="field"><input type="number" min="0" step="0.5" data-b value="${f.op === op ? f.b : ""}" aria-label="To hours"></div> hours`
+        : `<div class="field"><input type="number" min="0" step="0.5" data-a value="${f.op === op ? f.a : ""}" aria-label="Hours"></div> hours`}</div>`;
     menu.innerHTML = `
       <label class="menu__opt"><input type="checkbox" data-exrest ${f.exRest ? "checked" : ""}><span class="box">${icon("check")}</span><span>Exclude rest days &amp; public holidays</span></label>
       <label class="menu__opt"><input type="checkbox" data-exoff ${f.exOff ? "checked" : ""}><span class="box">${icon("check")}</span><span>Exclude time offs</span></label>
@@ -517,6 +511,9 @@
     });
   }
 
+  // Overview range trigger uses the shared date picker (as in Clock in); picking a day moves to its period.
+  let rangePicker = null;
+
   // ---------- Calendar popover ----------
   function buildCal(menu, mode, onPick) {
     let view = mk(state.view === "detail" ? parseKey(state.detail.day).getFullYear() : state.anchor.getFullYear(), (state.view === "detail" ? parseKey(state.detail.day) : state.anchor).getMonth(), 1);
@@ -559,7 +556,7 @@
   // ---------- List: table ----------
   function columns() {
     const days = periodDays();
-    if (state.period === "week") return days.map((d, i) => ({ id: "d" + i, kind: "day", day: d, head: `<span class="day-h">${DOW3[d.getDay()]} <span class="day-n">${d.getDate()}</span></span>`, today: key(d) === TODAY_KEY, label: fmtDay(d) }));
+    if (state.period === "week") return days.map((d, i) => ({ id: "d" + i, kind: "day", day: d, head: `<span class="day-h">${DOW3[d.getDay()]} <span class="day-n">${d.getDate()}</span></span>`, today: key(d) === TODAY_KEY, future: cmpDay(d) > 0, label: fmtDay(d) }));
     if (state.period === "day") {
       const d = days[0];
       return [
@@ -569,7 +566,7 @@
       ];
     }
     // Month: one heat square per day, as live; the Legend explains the bands.
-    return days.map((d, i) => ({ id: "d" + i, kind: "mday", day: d, head: `<span class="day-h day-h--stack"><span>${DOW3[d.getDay()][0]}</span><span class="day-n">${d.getDate()}</span></span>`, today: key(d) === TODAY_KEY, label: fmtDay(d), nosort: true }));
+    return days.map((d, i) => ({ id: "d" + i, kind: "mday", day: d, head: `<span class="day-h day-h--stack"><span>${DOW3[d.getDay()][0]}</span><span class="day-n">${d.getDate()}</span></span>`, today: key(d) === TODAY_KEY, future: cmpDay(d) > 0, label: fmtDay(d), nosort: true }));
   }
   function cellValue(m, col) {
     if (col.kind === "day" || col.kind === "mday") return trackedOf(compute(m, col.day));
@@ -600,6 +597,12 @@
     return `<button class="sort" data-sort="${id}" ${dir ? `data-dir="${dir}"` : ""} aria-label="Sort by ${esc(label.replace(/<[^>]+>/g, ""))}">${align === "right" ? icon(dir === "asc" ? "chevron-up" : dir === "desc" ? "chevron-down" : "sort") + label : label + icon(dir === "asc" ? "chevron-up" : dir === "desc" ? "chevron-down" : "sort")}</button>`;
   }
 
+  // Shortcut buttons (Today, Current period) slide in and out instead of popping, as in the date picker footer.
+  function reveal(wrap, on) {
+    if (!on && wrap.contains(document.activeElement)) wrap.closest(".bar__group")?.querySelector(".filter__btn, .round-btn")?.focus();
+    wrap.classList.toggle("is-hidden", !on);
+    wrap.inert = !on;
+  }
   function renderList() {
     const days = periodDays(), cols = columns();
     const all = visibleMembers();
@@ -610,28 +613,30 @@
 
     $("#periodLabel").textContent = PERIOD_WORD[state.period];
     $$("#periodMenu [data-period]").forEach(o => o.setAttribute("aria-selected", o.dataset.period === state.period));
+    if (rangePicker) rangePicker.value = state.anchor;
     $("#rangeLabel").textContent = rangeLabel(days);
     $("#prevBtn").setAttribute("aria-label", `Previous ${PERIOD_UNIT[state.period]}`);
     $("#nextBtn").setAttribute("aria-label", `Next ${PERIOD_UNIT[state.period]}`);
-    $("#todayBtn").hidden = days.some(d => key(d) === TODAY_KEY);
+    reveal($("#todayWrap"), !days.some(d => key(d) === TODAY_KEY));
+    $("#todayBtn").textContent = { week: "This week", month: "This month" }[state.period] || "Today";
 
     // Columns: member 302 → 240 floor, total 140 → 100, days share the rest (≥104).
     $("#gridCols").innerHTML = `<col data-col="member">${cols.map(() => "<col>").join("")}<col data-col="total">`;
     const dayMin = state.period === "day" ? 140 : state.period === "month" ? 22 : 112;
     $("#grid").classList.toggle("grid--month", state.period === "month");
     $("#legendWrap").hidden = state.period !== "month";
-    $("#grid").style.minWidth = `${(state.period === "month" ? 200 : 240) + cols.length * dayMin + 100}px`;
+    $("#grid").style.minWidth = `${(state.period === "month" ? 200 : 272) + cols.length * dayMin + 88}px`;
     sizeColumns();
 
     const ariaSort = id => state.sort.key === id ? (state.sort.dir === "asc" ? "ascending" : "descending") : "none";
     $("#gridHead").innerHTML = `<tr>
       <th scope="col" class="c-member" aria-sort="${ariaSort("name")}">${sortHead("name", "Member")}</th>
-      ${cols.map(c => `<th scope="col" class="${c.today ? "is-today" : ""}" ${c.nosort ? "" : `aria-sort="${ariaSort(c.id)}"`}>${c.nosort ? c.head : sortHead(c.id, c.head)}</th>`).join("")}
+      ${cols.map(c => `<th scope="col" class="${c.today ? "is-today" : c.future ? "is-future" : ""}" ${c.nosort ? "" : `aria-sort="${ariaSort(c.id)}"`}>${c.nosort ? c.head : sortHead(c.id, c.head)}</th>`).join("")}
       <th scope="col" class="c-total" aria-sort="${ariaSort("total")}">${sortHead("total", state.period === "day" ? "Tracked" : "Total", "right")}</th></tr>`;
 
     $("#gridBody").innerHTML = rows.map(m => `<tr>
       <th scope="row" class="c-member"><a class="mem" href="#/details/${m.id}/${key(defaultDay(days))}">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></a></th>
-      ${cols.map(c => `<td>${cellHtml(m, c)}</td>`).join("")}
+      ${cols.map(c => `<td${c.future ? ' class="is-future"' : ""}>${cellHtml(m, c)}</td>`).join("")}
       <td class="c-total">${totalHtml(m, days)}</td></tr>`).join("");
 
     const empty = $("#gridEmpty");
@@ -651,18 +656,25 @@
     if (info.rest) return `<span class="tag tag--rest"><span>Rest day</span></span>`;
     return "";
   }
-  // Monthly heat bands, as the live Legend: 0, 0–2, 2–4, 4–6, 6–8, 8–10, 10+ hours.
-  const heatLevel = v => v <= 0 ? 0 : Math.min(6, Math.floor(v / 120) + 1);
-  const HEAT_LEGEND = [["0", "0 hours"], ["1", "0–2 hours"], ["2", "2–4 hours"], ["3", "4–6 hours"], ["4", "6–8 hours"], ["5", "8–10 hours"], ["6", "10+ hours"],
-    ["holiday", "Public holiday"], ["rest", "Rest day"], ["off", "Time off"], ["short", "Shortened workday"], ["ot", "Overtime"]];
+  // Monthly status tiles, as live Jibble: green = full day (8h+), yellow = under 8h, red = a past workday with no time.
+  // Days off show an icon instead: rest day, public holiday, time off. Overtime adds a corner dot.
+  const DAY_TARGET = 480;
+  // Jibble-style heatmap: tile colour = hours tracked (2h buckets), icon = day marker.
+  const HEAT_BUCKETS = [["h0", "0 hours"], ["h1", "0-2 hours"], ["h2", "2-4 hours"], ["h3", "4-6 hours"], ["h4", "6-8 hours"], ["h5", "8-10 hours"], ["h6", "10+ hours"]];
+  const HEAT_MARKS = [["holiday", "calendar", "Public holiday"], ["rest", "palm", "Rest day"], ["off", "case", "Time off"], ["short", "history", "Shortened workday"], ["ot", "moon", "Overtime"]];
+  const HEAT_ICON = Object.fromEntries(HEAT_MARKS.map(([k, ic]) => [k, ic]));
+  const bucketOf = v => v <= 0 ? "h0" : "h" + Math.min(6, Math.floor(v / 120) + 1);
+  const heatTile = mk => mk ? icon(HEAT_ICON[mk], "i i-14") : "";
   function heatHtml(m, d) {
     const c = compute(m, d), v = trackedOf(c), i = c.info, p = payroll(c);
-    const lvl = i.holiday && !v ? "holiday" : i.timeoff && !v ? "off" : i.rest && !v ? "rest" : String(heatLevel(v));
-    const ot = p.dot + p.ddot + p.rest + p.hol > 0;
-    const words = [i.timeoff && TIME_OFF_NAME[i.timeoff], i.holiday && `Public Holiday (${i.holiday})`, i.rest && "Rest day", v ? `${hmm(v)} tracked` : "no time tracked", ot && "includes overtime"].filter(Boolean).join(", ");
-    if (i.future) return `<span class="hm hm--future" aria-hidden="true"></span>`;
-    return `<a class="hm hm--${lvl}${ot ? " hm--ot" : ""}" href="#/details/${m.id}/${key(d)}" aria-label="${esc(m.name)}, ${fmtDay(d)}: ${esc(words)}" data-tip="${fmtDay(d)} · ${esc(words)}"></a>`;
+    const ot = p.dot + p.ddot + p.rest + p.hol > 0, short = m.emp === "pt" && !i.rest && !i.holiday && !i.timeoff;
+    const mk = i.timeoff ? "off" : i.holiday ? "holiday" : i.rest ? "rest" : ot ? "ot" : short ? "short" : "";
+    const words = [i.timeoff && TIME_OFF_NAME[i.timeoff], i.holiday && `Public Holiday (${i.holiday})`, i.rest && "Rest day", short && "Shortened workday", v ? `${hmm(v)} tracked` : "no time tracked", ot && "includes overtime"].filter(Boolean).join(", ");
+    if (i.future) return `<span class="hm hm--future" aria-hidden="true">${heatTile(i.timeoff ? "off" : i.holiday ? "holiday" : i.rest ? "rest" : "")}</span>`;
+    const lvl = i.today && !v ? "none" : bucketOf(v);
+    return `<a class="hm hm--${lvl}" href="#/details/${m.id}/${key(d)}" aria-label="${esc(m.name)}, ${fmtDay(d)}: ${esc(words)}" data-tip="${fmtDay(d)} · ${esc(words)}">${heatTile(mk)}</a>`;
   }
+
   function cellHtml(m, col) {
     if (col.kind === "mday") return heatHtml(m, col.day);
     if (col.kind === "week") {
@@ -696,6 +708,7 @@
 
   function renderPager(n, pages) {
     $("#pager").hidden = n === 0;
+    $("#pages").hidden = pages <= 1;
     const p = state.page;
     const nums = [];
     if (pages <= 7) for (let i = 1; i <= pages; i++) nums.push(i);
@@ -712,8 +725,8 @@
     const w = $("#gridWrap").clientWidth || $("#content").clientWidth;
     const mc = $('#gridCols [data-col="member"]'), tc = $('#gridCols [data-col="total"]');
     if (!mc) return;
-    mc.style.width = (state.period === "month" ? 200 : Math.round(Math.min(302, Math.max(240, w * 0.25)))) + "px";
-    tc.style.width = Math.round(Math.min(140, Math.max(100, w * 0.116))) + "px";
+    mc.style.width = (state.period === "month" ? 200 : Math.round(Math.min(340, Math.max(272, w * 0.28)))) + "px";
+    tc.style.width = Math.round(Math.min(104, Math.max(88, w * 0.09))) + "px";
   }
   function updateScrollCue() {
     const w = $("#gridWrap");
@@ -729,7 +742,7 @@
     const c = compute(m, day);
 
     $("#dRangeLabel").textContent = `${fmtD(week[0])} – ${fmtD(week[6])}`;
-    $("#dNext").disabled = weekStart(addDays(ws, 7)) > weekStart(TODAY);
+    { const atNow = weekStart(addDays(ws, 7)) > weekStart(TODAY); $("#dNext").disabled = atNow; $("#dNext").style.visibility = atNow ? "hidden" : ""; }
     $("#addTimeBtn").disabled = false;
 
     // Detail tabs
@@ -750,27 +763,29 @@
     renderPayrollTab(m, week);
     renderShots(m, day);
     renderSide(m, week);
-    $("#allTzBtn").setAttribute("aria-pressed", state.allTz);
-    $("#allTzBtn").textContent = state.allTz ? "Hide other timezones" : "View all timezones";
   }
 
 
   const PLAT = { mobile: ["phone", "Mobile app"], web: ["browser", "Web app"], desktop: ["kiosk", "Desktop app"], kiosk: ["kiosk", "Kiosk"], browser: ["globe", "Browser extension"] };
+  // One table per day: Time · Type (with source flags) · Activity · Project · Note · Duration, edit/delete revealed on hover.
   function renderEntries(m, c, day) {
     const list = $("#entries");
     const rows = [...c.all].filter(e => e.type !== "hours").sort((a, b) => a.t - b.t || a.id - b.id);
     const hours = c.all.filter(e => e.type === "hours");
     if (!rows.length && !hours.length) {
       const why = c.info.future ? "This day hasn't happened yet." : c.info.timeoff ? `${TIME_OFF_NAME[c.info.timeoff]} on this day.` : c.info.rest ? "Rest day. There are no time entries on this day." : "There are no time entries on this day.";
-      list.innerHTML = `<li class="day-empty">${icon("clock")}<strong>Tick tock goes the clock</strong>${why}</li>`;
+      list.innerHTML = `<div class="day-empty">${icon("clock")}<strong>Tick tock goes the clock</strong>${why}</div>`;
       return;
     }
-    const shift = viewerShift(m), otherShift = state.tzMode === "yours" ? 0 : (VIEWER_TZ.off - TZ[m.tz].off) * 60;
-    const theirLbl = gmt(TZ[m.tz].off), yourLbl = gmt(VIEWER_TZ.off);
-    list.innerHTML = rows.concat(hours).map(e => {
+    const shift = viewerShift(m);
+    const none = `<span class="is-empty">–</span>`;
+    list.innerHTML = `<table class="etable"><caption class="sr-only">Time entries, ${fmtDay(day)}</caption>
+      <colgroup><col class="col-time"><col class="col-type"><col class="col-act"><col class="col-proj"><col><col class="col-dur"><col class="col-ops"></colgroup>
+      <thead><tr><th scope="col">Time</th><th scope="col">Type</th><th scope="col">Activity</th><th scope="col">Project</th><th scope="col">Note</th><th scope="col" class="c-dur">Duration</th><th scope="col" class="c-ops"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>${rows.concat(hours).map(e => {
       const A = e.act && ACTIVITIES.find(a => a.id === e.act), Pj = e.proj && PROJECTS.find(p => p.id === e.proj);
       const d = c.durs.get(e.id);
-      const dur = e.deleted ? "" : d ? `<span class="entry__dur${d.live ? " is-live" : ""}">${hmm(d.len)}</span>` : `<span class="entry__dur">-</span>`;
+      const dur = e.deleted ? `<span class="tag tag--deleted">Deleted</span>` : d ? `<span class="entry__dur${d.live ? " is-live" : ""}">${hmm(d.len)}</span>` : none;
       const typeChip = e.type === "in" ? `<span class="type type--in">${icon("login")}Clock in</span>` : e.type === "break" ? `<span class="type type--break">${icon("coffee")}Break</span>` : e.type === "out" ? `<span class="type type--out">${icon("logout")}Clock out</span>` : `<span class="type type--hours">${icon("clock")}Hour entry</span>`;
       const [pi, pl] = PLAT[e.plat] || PLAT.web;
       const flags = [
@@ -780,62 +795,81 @@
         e.flags.face ? `<span role="img" aria-label="Face recognition" data-tip="Face recognition">${icon("face")}</span>` : "",
         e.manual ? `<span role="img" aria-label="Manual entry" data-tip="Manual entry">${icon("hand")}</span>` : "",
       ].join("");
-      const timeTxt = e.type === "hours" ? `<span class="entry__time">${hmm(e.dur)}</span>` : `<span class="entry__time">${clock12(e.t + shift)}${state.allTz && TZ[m.tz].off !== VIEWER_TZ.off ? `<small>${clockShort(e.t + shift + otherShift)} ${state.tzMode === "yours" ? theirLbl : yourLbl}</small>` : ""}</span>`;
-      const av = e.flags.face ? avatar(m, 48, "entry-av") : `<span class="avatar entry-av entry-av--icon" aria-hidden="true">${icon("person")}</span>`;
-      const chips = [A && `<span class="dd-chip dd-chip--color" style="--chip:${A.color}" title="Activity">${esc(A.name)}</span>`, Pj && `<span class="dd-chip dd-chip--grey" title="Project">${esc(Pj.name)}${e.task ? ` · ${esc(e.task)}` : ""}</span>`].filter(Boolean).join("");
-      const deleted = e.deleted ? `<span class="tag tag--deleted">Deleted</span>` : "";
+      const timeTxt = e.type === "hours" ? none : clock12(e.t + shift);
       const label = `${e.type === "hours" ? "Hour entry " + hmm(e.dur) : `${{ in: "Clock in", break: "Break", out: "Clock out" }[e.type]} at ${clock12(e.t + shift)}`}`;
-      return `<li class="entry${e.deleted ? " is-deleted" : ""}" data-id="${e.id}">
-        <div class="entry__left">${av}${timeTxt}${typeChip}<span class="flags">${flags}</span></div>
-        <div class="entry__mid">${chips ? `<div class="entry__chips">${chips}</div>` : ""}${e.note ? `<p class="entry__note" data-tip="${esc(e.note)}" data-tip-overflow>${esc(e.note)}</p>` : ""}</div>
-        <div class="entry__right">${dur}${deleted}</div>
-        <div class="entry__acts"><button class="icon-btn" data-edit="${e.id}" aria-label="Edit ${esc(label)}" title="Edit">${icon("pencil")}</button><button class="icon-btn" data-del="${e.id}" aria-label="Delete ${esc(label)}" title="Delete">${icon("trash")}</button></div>
-      </li>`;
-    }).join("");
+      return `<tr class="${e.deleted ? "is-deleted" : ""}" data-id="${e.id}">
+        <td class="c-time">${timeTxt}</td>
+        <td><span class="etable__type">${typeChip}<span class="flags">${flags}</span></span></td>
+        <td>${A ? `<span class="dd-chip dd-chip--color" style="--chip:${A.color}" title="${esc(A.name)}">${esc(A.name)}</span>` : none}</td>
+        <td>${Pj ? `<span class="dd-chip dd-chip--grey" title="${esc(Pj.name)}">${esc(Pj.name)}${e.task ? ` · ${esc(e.task)}` : ""}</span>` : none}</td>
+        <td class="c-note">${e.note ? `<p class="entry__note" data-tip="${esc(e.note)}" data-tip-overflow>${esc(e.note)}</p>` : none}</td>
+        <td class="c-dur">${dur}</td>
+        <td class="c-ops">${e.deleted ? "" : `<span class="entry__acts"><button class="icon-btn" data-edit="${e.id}" aria-label="Edit ${esc(label)}" title="Edit">${icon("pencil")}</button><button class="icon-btn" data-del="${e.id}" aria-label="Delete ${esc(label)}" title="Delete">${icon("trash")}</button></span>`}</td>
+      </tr>`;
+    }).join("")}</tbody></table>`;
   }
 
   function renderAccordions(m, week) {
     const comps = week.map(d => ({ d, c: compute(m, d) }));
     const tot = comps.reduce((s, x) => ({ w: s.w + x.c.worked, b: s.b + x.c.brk }), { w: 0, b: 0 });
-    const pays = comps.map(x => payroll(x.c));
-    const ptot = pays.reduce((s, p) => s + p.total, 0);
     const hist = HISTORY.filter(h => h.mid === m.id && week.some(d => key(d) === h.day));
-    const cell = v => v ? `<td>${hmm(v)}</td>` : `<td class="is-muted">-</td>`;
-    const acc = (id, title, sub, meta, body) => `<div class="acc"><button class="acc__btn" aria-expanded="${state.open[id]}" aria-controls="acc-${id}" data-acc="${id}"><span class="acc__title">${title}<small>${sub}</small></span><span class="acc__meta">${meta}</span>${icon("chevron-down")}</button><div class="acc__body" id="acc-${id}" ${state.open[id] ? "" : "hidden"}>${body}</div></div>`;
+    const card = (title, sub, meta, body) => `<section class="tcard"><header class="tcard__head"><span class="acc__title"><h2 class="tcard__title">${title}</h2><p class="tcard__sub">${sub}</p></span><span class="acc__meta">${meta}</span></header>${body}</section>`;
+    $("#historyCount").textContent = hist.length;
+    $("#historyCount").hidden = !hist.length;
+    $("#historyBody").innerHTML = hist.length
+      ? `<p class="fs__hint">Time entries that were added or changed by hand, ${fmtD(week[0])} – ${fmtD(week[6])}</p><div class="kv-wrap"><table class="kv kv--text"><thead><tr><th>Change</th><th>Reason</th><th>Timestamp</th></tr></thead><tbody>${hist.map(h => `<tr><td>${esc(h.change)}<br><span class="cell__sub">by ${esc(h.by)}</span></td><td>${esc(h.reason || "-")}</td><td>${esc(h.ts)}</td></tr>`).join("")}</tbody></table></div>`
+      : `<p class="panel-note">No manual changes this week.</p>`;
     $("#accs").innerHTML =
-      acc("tracked", "Tracked hours", "Worked hours and breaks for each day", hmm(tot.w + tot.b), `<div class="kv-wrap"><table class="kv"><thead><tr><th>Day</th><th>Worked</th><th>Breaks</th><th>Auto deductions</th><th>Tracked</th></tr></thead><tbody>${comps.map(x => `<tr><td>${fmtDay(x.d)}</td>${cell(x.c.worked)}${cell(x.c.brk)}<td class="is-muted">-</td>${cell(x.c.worked)}</tr>`).join("")}</tbody><tfoot><tr><td>Week</td>${cell(tot.w)}${cell(tot.b)}<td class="is-muted">-</td>${cell(tot.w)}</tr></tfoot></table></div>`) +
-      acc("payroll", "Payroll hours", "Regular hours, overtime and time off", hmm(ptot), payrollTable(comps, pays)) +
-      acc("history", "Change history", "A log of time entries that were added or changed by hand", `<span class="count-pill">${hist.length}</span>`, hist.length
-        ? `<div class="kv-wrap"><table class="kv kv--text"><thead><tr><th>Change</th><th>Reason</th><th>Timestamp</th></tr></thead><tbody>${hist.map(h => `<tr><td>${esc(h.change)}<br><span class="cell__sub">by ${esc(h.by)}</span></td><td>${esc(h.reason || "-")}</td><td>${esc(h.ts)}</td></tr>`).join("")}</tbody></table></div>`
-        : `<p class="panel-note">No manual changes this week.</p>`);
+      card("Tracked hours", "Worked hours and breaks for each day", hmm(tot.w + tot.b), hoursGrid(m, week, ["tracked"]));
   }
-  // Accordion version (per-day rows), kept for the Time entries tab.
-  function payrollTable(comps, pays) {
-    const cell = v => v ? `<td>${hmm(v)}</td>` : `<td class="is-muted">-</td>`;
-    const sum = k => pays.reduce((s, p) => s + p[k], 0);
-    return `<div class="kv-wrap"><table class="kv"><thead><tr><th>Day</th><th>Regular</th><th>Daily OT</th><th>Daily double OT</th><th>Rest day OT</th><th>Public holiday OT</th><th>Time off</th><th>Payroll</th></tr></thead>
-      <tbody>${comps.map((x, i) => { const p = pays[i]; return `<tr><td>${fmtDay(x.d)}</td>${cell(p.regular)}${cell(p.dot)}${cell(p.ddot)}${cell(p.rest)}${cell(p.hol)}${cell(p.off)}${cell(p.total)}</tr>`; }).join("")}</tbody>
-      <tfoot><tr><td>Week</td>${["regular", "dot", "ddot", "rest", "hol", "off", "total"].map(k => cell(sum(k))).join("")}</tr></tfoot></table></div>`;
-  }
-  // Live orientation: metrics down the side, the seven days across, the week at the end.
-  const PAYROLL_ROWS = [
-    ["Tracked hours", c => trackedOf(c), true],
-    ["Worked hours", c => c.worked],
-    ["Breaks", c => c.brk],
-    ["Payroll hours", (c, p) => p.total, true],
-    ["Regular hours", (c, p) => p.regular],
-    ["Daily overtime", (c, p) => p.dot],
-    ["Daily double overtime", (c, p) => p.ddot],
-    ["Rest day overtime", (c, p) => p.rest],
-    ["Public holiday overtime", (c, p) => p.hol],
-    ["Time off", (c, p) => p.off],
-  ];
-  function renderPayrollTab(m, week) {
+  // Week grid (Jibble's payroll layout): metrics down the side with the week total beside each label,
+  // days across with each day's tracked total, rest days grouped under one bar, week arrows at both ends.
+  // Rows and labels mirror the side panel's Weekly summary.
+  const HOUR_GROUPS = {
+    tracked: [
+      ["Tracked hours", c => trackedOf(c), true],
+      ["Worked hours", c => c.worked],
+      [`Breaks<span class="unpaid">UNPAID</span>`, c => c.brk],
+      ["Auto deductions", () => 0],
+    ],
+    payroll: [
+      ["Payroll hours", (c, p) => p.total, true],
+      ["Regular hours", (c, p) => p.regular],
+      ["Daily OT", (c, p) => p.dot],
+      ["Daily double OT", (c, p) => p.ddot],
+      ["Rest day OT", (c, p) => p.rest],
+      ["Public holiday OT", (c, p) => p.hol],
+      ["Time off", (c, p) => p.off],
+    ],
+  };
+  function hoursGrid(m, week, groups) {
     const comps = week.map(d => compute(m, d)), pays = comps.map(payroll);
-    const cell = v => v ? `<td>${hmm(v)}</td>` : `<td class="is-muted">-</td>`;
+    const infos = week.map(d => dayInfo(m, d));
+    const v = x => x ? hmm(x) : "-";
+    const cell = x => `<td class="${x ? "" : "is-muted"}">${v(x)}</td>`;
+    const atNow = weekStart(addDays(week[0], 7)) > weekStart(TODAY);
+    // Rest-day bar row: consecutive rest days share one bar
+    let bar = "", i = 0;
+    while (i < 7) {
+      if (!infos[i].rest) { bar += `<td></td>`; i++; continue; }
+      let n = 0; while (i + n < 7 && infos[i + n].rest) n++;
+      bar += `<td colspan="${n}"><span class="wk__rest">Rest day</span></td>`; i += n;
+    }
+    const head = `<thead>
+      <tr class="wk__bar" aria-hidden="true"><td colspan="3"></td>${bar}<td></td></tr>
+      <tr><th scope="col" class="wk__label"><span class="sr-only">Metric</span></th><th scope="col" class="wk__total">Week</th>
+        <td class="wk__nav"><button class="round-btn round-btn--36" data-wk="-1" aria-label="Previous week">${icon("chevron-left")}</button></td>
+        ${week.map((d, j) => `<th scope="col" class="wk__day${key(d) === TODAY_KEY ? " is-today" : ""}${infos[j].future || infos[j].rest ? " is-dim" : ""}">${DOW3[d.getDay()]}, ${d.getDate()}<span class="kv__sub">${v(trackedOf(comps[j]))}</span></th>`).join("")}
+        <td class="wk__nav">${atNow ? "" : `<button class="round-btn round-btn--36" data-wk="1" aria-label="Next week">${icon("chevron-right")}</button>`}</td></tr></thead>`;
+    const body = groups.map(g => `<tbody>${HOUR_GROUPS[g].map(([label, f, lead]) => {
+      const vals = comps.map((c, j) => f(c, pays[j])), tot = vals.reduce((a, b) => a + b, 0);
+      return `<tr class="${lead ? "kv__group" : "kv__sub-row"}"><th scope="row" class="wk__label">${label}</th><td class="wk__total">${v(tot)}</td><td class="wk__nav"></td>${vals.map(cell).join("")}<td class="wk__nav"></td></tr>`;
+    }).join("")}</tbody>`).join("");
+    return `<div class="kv-wrap"><table class="kv kv--week">${head}${body}</table></div>`;
+  }
+  function renderPayrollTab(m, week) {
     $("#panelPayroll").innerHTML = `<div class="panel-head"><h2 class="panel-title">Payroll hours</h2><p class="panel-sub">Hours generated from tracked time to prepare for payroll, ${fmtD(week[0])} – ${fmtD(week[6])}</p></div>
-      <div class="kv-wrap"><table class="kv kv--grid"><thead><tr><th scope="col"><span class="sr-only">Metric</span></th>${week.map(d => `<th scope="col" class="${key(d) === TODAY_KEY ? "is-today" : ""}">${DOW3[d.getDay()]}, ${d.getDate()}${dayInfo(m, d).rest ? `<span class="kv__sub">Rest day</span>` : ""}</th>`).join("")}<th scope="col">Week</th></tr></thead>
-      <tbody>${PAYROLL_ROWS.map(([label, f, head]) => { const vals = comps.map((c, i) => f(c, pays[i])); return `<tr class="${head ? "kv__group" : "kv__sub-row"}"><th scope="row">${label}</th>${vals.map(cell).join("")}${cell(vals.reduce((a, b) => a + b, 0))}</tr>`; }).join("")}</tbody></table></div>
+      <div class="tcard">${hoursGrid(m, week, ["tracked", "payroll"])}</div>
       <p class="panel-note">Overtime here follows a sample rule set: daily overtime after 8 hours, double after 12, rest days and public holidays paid as overtime, 8 hours per day of time off.</p>`;
   }
   function renderShots(m, day) {
@@ -853,7 +887,7 @@
   function renderSide(m, week) {
     const off = TZ[m.tz].off;
     const st = memberStatus(m);
-    $("#whoBtn").innerHTML = `<span class="who__av" data-status="${st.s}">${avatar(m, 48)}</span><span class="who__text"><span class="who__name">${esc(m.name)}</span><span class="who__meta">${esc(st.text)}</span></span>${icon("chevron-down", "i i-16")}`;
+    $("#whoBtn").innerHTML = `<span class="who__av" data-status="${st.s}">${avatar(m, 48)}</span><span class="who__text"><span class="who__name">${esc(m.name)}</span><span class="who__meta">${esc(st.text)}</span></span>`;
     $("#whoBtn").setAttribute("aria-label", `Member: ${m.name}. ${st.text}. Change member`);
 
     const comps = week.map(d => compute(m, d));
@@ -1151,6 +1185,8 @@
       const others = list.filter(x => !x.deleted && x.type !== "hours" && x.id !== editing.id).sort((a, b) => a.t - b.t);
       if (others.some(x => x.t === t)) { entryForm.time.setAttribute("aria-invalid", "true"); return err(`There's already an entry at ${clockShort(t)}. Pick another time.`); }
       const prev = [...others].reverse().find(x => x.t < t);
+      const next = others.find(x => x.t > t);
+      if (type === "in" && (prev?.type === "in" || next?.type === "in")) { entryForm.time.setAttribute("aria-invalid", "true"); return err("A clock in must be followed by a break or a clock out, not another clock in. Pick another time or entry type."); }
       if (type !== "in" && (!prev || prev.type === "out")) { entryForm.time.setAttribute("aria-invalid", "true"); return err(`A ${type === "break" ? "break" : "clock out"} needs a clock in before it. Add the clock in first.`); }
       const name = { in: "Clock in", break: "Break", out: "Clock out" }[type];
       if (editing.id) {
@@ -1309,36 +1345,44 @@
     return t;
   }
   const apCan = st => st === "open" || st === "reopened";
+  const apPick = st => apCan(st) || st === "approved"; /* selectable: can be approved, or reopened in bulk */
   function renderApprovals() {
     $("#apNone").hidden = !AP.none; $("#apMain").hidden = AP.none;
     if (AP.none) return;
     const days = apDays(), cur = key(AP.week) >= curWeek();
     $("#apRange").textContent = apRange();
-    $("#apNext").disabled = cur;
-    $("#apCurrent").hidden = cur;
-    $("#apNote").hidden = !cur;
+    $("#apNext").disabled = cur; $("#apNext").style.visibility = cur ? "hidden" : "";
+    reveal($("#apCurrentWrap"), !cur);
     const list = visibleMembers(days).map(m => ({ m, st: apStatus(m, AP.week), t: apTotals(m, days) }))
       .filter(x => !AP.statuses.size || AP.statuses.has(x.st)).sort((a, b) => a.m.name.localeCompare(b.m.name));
-    [...AP.sel].forEach(id => { if (!list.some(x => x.m.id === id && apCan(x.st))) AP.sel.delete(id); });
-    const act = list.filter(x => apCan(x.st)), allOn = act.length > 0 && act.every(x => AP.sel.has(x.m.id));
+    [...AP.sel].forEach(id => { if (!list.some(x => x.m.id === id && apPick(x.st))) AP.sel.delete(id); });
+    const act = list.filter(x => apPick(x.st)), allOn = act.length > 0 && act.every(x => AP.sel.has(x.m.id));
     const box = (attrs, on, label) => `<label class="check check--bare"><input type="checkbox" ${attrs} ${on ? "checked" : ""} aria-label="${esc(label)}"><span class="box">${icon("check")}</span></label>`;
-    $("#apHead").innerHTML = `<tr><th scope="col" class="c-check">${act.length ? box('id="apAll"', allOn, "Select every member that can be approved") : ""}</th>
+    $("#apHead").innerHTML = `<tr><th scope="col" class="c-check">${box(`id="apAll"${act.length ? "" : " disabled"}`, allOn, "Select every member that can be approved or reopened")}</th>
       <th scope="col" class="c-member">Member</th><th scope="col">Tracked</th><th scope="col">Regular</th><th scope="col">Overtime</th><th scope="col">Time off</th><th scope="col">Status</th><th scope="col" class="c-act"><span class="sr-only">Actions</span></th></tr>`;
     const v = x => x ? `<span class="t">${hm(x)}</span>` : `<span class="t is-empty">–</span>`;
     const day1 = key(AP.week) > TODAY_KEY ? TODAY_KEY : key(AP.week);
     $("#apBody").innerHTML = list.map(({ m, st, t }) => `<tr class="${AP.sel.has(m.id) ? "is-selected" : ""}">
-      <td class="c-check">${apCan(st) ? box(`data-apsel="${m.id}"`, AP.sel.has(m.id), `Select ${m.name}`) : ""}</td>
+      <td class="c-check">${box(`data-apsel="${m.id}"${apPick(st) ? "" : " disabled"}`, AP.sel.has(m.id), apPick(st) ? `Select ${m.name}` : `${m.name}: ${AP_STATUS[st]}, nothing to approve or reopen`)}</td>
       <th scope="row" class="c-member"><a class="mem" href="#/details/${m.id}/${day1}">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></a></th>
       <td>${v(t.tracked)}</td><td>${v(t.regular)}</td><td>${v(t.ot)}</td><td>${v(t.off)}</td>
       <td><span class="tag tag--st tag--st-${st}">${AP_STATUS[st]}</span></td>
-      <td class="c-act">${apCan(st) ? `<button class="btn btn--outlined btn--36" data-approve="${m.id}" aria-label="Approve ${esc(m.name)}">${icon("check", "i i-16")}Approve</button>` : st === "approved" ? `<button class="link-btn" data-reopen="${m.id}" aria-label="Reopen ${esc(m.name)}">Reopen</button>` : ""}</td></tr>`).join("");
+      <td class="c-act">${apCan(st) ? `<button class="btn btn--positive btn--icon" data-approve="${m.id}" aria-label="Approve ${esc(m.name)}" title="Approve">${icon("check", "i i-16")}</button>` : st === "approved" ? `<button class="btn btn--outlined btn--icon" data-reopen="${m.id}" aria-label="Reopen ${esc(m.name)}" title="Reopen">${icon("history", "i i-16")}</button>` : ""}</td></tr>`).join("");
+    $("#apGrid").classList.toggle("is-nocheck", !act.length);
     $("#apEmpty").hidden = list.length > 0; $("#apGridWrap").hidden = !list.length;
     if (!list.length) $("#apEmpty").innerHTML = `<strong>No members match</strong>Try another search, status or filter.`;
     const some = act.some(x => AP.sel.has(x.m.id));
     if ($("#apAll")) $("#apAll").indeterminate = some && !allOn;
     $("#clearAll").hidden = activeFilterCount() === 0 && !state.search;
     $("#apBulk").hidden = !AP.sel.size;
-    $("#apBulkCount").textContent = `${AP.sel.size} selected`;
+    $("#apBulkCountText").textContent = `${AP.sel.size} selected`;
+    $("#apBulkCount").setAttribute("aria-label", `${AP.sel.size} selected. Clear selection`);
+    // Mixed selection: each action names how many rows it applies to.
+    const { approve, reopen } = apSplit(), mixed = approve.length && reopen.length;
+    $("#apBulkApprove").hidden = !approve.length;
+    $("#apBulkReopen").hidden = !reopen.length;
+    $("#apBulkApproveLbl").textContent = mixed ? `Approve ${approve.length}` : "Approve";
+    $("#apBulkReopenLbl").textContent = mixed ? `Reopen ${reopen.length}` : "Reopen";
     $("#statusBtn").classList.toggle("is-active", AP.statuses.size > 0);
     $("#statusLabel").textContent = AP.statuses.size === 1 ? AP_STATUS[[...AP.statuses][0]] : "Statuses";
     $("#statusCount").textContent = AP.statuses.size > 1 ? AP.statuses.size : "";
@@ -1346,7 +1390,7 @@
   }
   // After a re-render, put focus back on the row's control (or the table) so keyboard users keep their place.
   function apFocus(id) {
-    const t = id && ($(`#apBody [data-approve="${id}"]`) || $(`#apBody [data-reopen="${id}"]`) || $(`#apBody [data-apsel="${id}"]`));
+    const t = id && ($(`#apBody [data-approve="${id}"]`) || $(`#apBody [data-reopen="${id}"]`) || $(`#apBody [data-apsel="${id}"]:not(:disabled)`));
     (t || $("#apAll") || $("#apBody .mem") || $("#apPrev")).focus();
   }
   function setApproval(ids, st, msg) {
@@ -1366,8 +1410,8 @@
   // The scope switch and the filter bar are one control set, moved between Timesheets and Approvals.
   function placeSharedBars(view) {
     const ap = view === "approvals";
-    if (ap) { $("#apScopeSlot").append($("#scopeSeg")); $("#apFilterSlot").append($("#filterBar")); }
-    else { $("#viewList h1").after($("#scopeSeg")); $("#gridWrap").before($("#filterBar")); }
+    if (ap) { $("#apMain > .bar > .bar__group").prepend($("#scopeSeg")); $("#apFilterSlot").append($("#filterBar")); }
+    else { $("#viewList > .bar > .bar__group").prepend($("#scopeSeg")); $("#gridWrap").before($("#filterBar")); }
     $("#statusWrap").hidden = !ap;
   }
   const apStep = dir => { const n = addDays(AP.week, 7 * dir); if (key(n) > curWeek()) return; AP.week = n; AP.sel.clear(); renderApprovals(); };
@@ -1376,7 +1420,7 @@
   $("#apCurrent").addEventListener("click", () => { AP.week = weekStart(TODAY); AP.sel.clear(); renderApprovals(); $("#apPrev").focus(); });
   $("#apGrid").addEventListener("change", e => {
     const i = e.target;
-    if (i.id === "apAll") $$("#apBody [data-apsel]").forEach(x => { if (i.checked) AP.sel.add(x.dataset.apsel); else AP.sel.delete(x.dataset.apsel); });
+    if (i.id === "apAll") $$("#apBody [data-apsel]:not(:disabled)").forEach(x => { if (i.checked) AP.sel.add(x.dataset.apsel); else AP.sel.delete(x.dataset.apsel); });
     else if (i.dataset.apsel) { if (i.checked) AP.sel.add(i.dataset.apsel); else AP.sel.delete(i.dataset.apsel); }
     else return;
     renderApprovals();
@@ -1387,13 +1431,33 @@
     if (a) setApproval([a.dataset.approve], "approved", `${byId(a.dataset.approve).name}'s timesheet approved for ${apRange()}.`);
     if (r) setApproval([r.dataset.reopen], "reopened", `${byId(r.dataset.reopen).name}'s timesheet reopened for ${apRange()}.`);
   });
-  $("#apBulkApprove").addEventListener("click", () => { const ids = [...AP.sel]; setApproval(ids, "approved", `${ids.length} timesheet${ids.length > 1 ? "s" : ""} approved for ${apRange()}.`); });
-  $("#apBulkClear").addEventListener("click", () => { AP.sel.clear(); renderApprovals(); });
+  function apSplit() {
+    const ids = [...AP.sel], st = id => apStatus(byId(id), AP.week);
+    return { approve: ids.filter(id => apCan(st(id))), reopen: ids.filter(id => st(id) === "approved") };
+  }
+  const plural = n => `${n} timesheet${n > 1 ? "s" : ""}`;
+  $("#apBulkApprove").addEventListener("click", () => { const ids = apSplit().approve; setApproval(ids, "approved", `${plural(ids.length)} approved for ${apRange()}.`); });
+  $("#apBulkReopen").addEventListener("click", () => { const ids = apSplit().reopen; setApproval(ids, "reopened", `${plural(ids.length)} reopened for ${apRange()}.`); });
+  $("#apBulkCount").addEventListener("click", () => { AP.sel.clear(); renderApprovals(); ($("#apAll:not(:disabled)") || $("#apPrev")).focus(); });
   $("#statusBtn").addEventListener("click", () => { buildStatusMenu(); toggleMenu($("#statusBtn"), $("#statusMenu")); });
 
   // ---------- Monthly legend ----------
-  $("#legendMenu").innerHTML = `<p class="menu__title">Legend</p><ul class="legend">${HEAT_LEGEND.map(([k, l]) => `<li><span class="hm ${k === "ot" ? "hm--4 hm--ot" : "hm--" + k}" aria-hidden="true"></span>${l}</li>`).join("")}</ul>`;
-  $("#legendBtn").addEventListener("click", () => toggleMenu($("#legendBtn"), $("#legendMenu")));
+  { const li = (vis, l) => `<li>${vis}<span>${l}</span></li>`;
+    $("#legendMenu").innerHTML = `<ul class="legend">${HEAT_BUCKETS.map(([k, l]) => li(`<span class="hm hm--${k}" aria-hidden="true"></span>`, l)).join("")}</ul>`
+      + `<ul class="legend">${HEAT_MARKS.map(([, ic, l]) => li(icon(ic, "i legend__ic"), l)).join("")}</ul>`; }
+  { // Info popover: hover/focus open, click toggles (touch), Esc/mouseleave/blur close.
+    const wrap = $("#legendWrap"), btn = $("#legendBtn"), pop = $("#legendMenu");
+    let pinned = false, t;
+    const show = () => { clearTimeout(t); pop.hidden = false; btn.setAttribute("aria-expanded", "true"); clampMenu(pop); };
+    const hide = () => { clearTimeout(t); pinned = false; pop.hidden = true; btn.setAttribute("aria-expanded", "false"); };
+    wrap.addEventListener("mouseenter", show);
+    wrap.addEventListener("mouseleave", () => { if (!pinned) t = setTimeout(hide, 120); });
+    btn.addEventListener("focus", show);
+    wrap.addEventListener("focusout", e => { if (!wrap.contains(e.relatedTarget)) hide(); });
+    btn.addEventListener("click", () => { if (pinned) hide(); else { pinned = true; show(); } });
+    document.addEventListener("pointerdown", e => { if (!pop.hidden && !wrap.contains(e.target)) hide(); });
+    wrap.addEventListener("keydown", e => { if (e.key === "Escape" && !pop.hidden) { e.stopPropagation(); hide(); btn.focus(); } });
+  }
 
   // ---------- Wire up: list ----------
   $("#periodBtn").addEventListener("click", () => toggleMenu($("#periodBtn"), $("#periodMenu")));
@@ -1413,7 +1477,9 @@
   $("#prevBtn").addEventListener("click", () => step(-1));
   $("#nextBtn").addEventListener("click", () => step(1));
   $("#todayBtn").addEventListener("click", () => { state.anchor = TODAY; renderList(); $("#rangeBtn").focus(); });
-  $("#rangeBtn").addEventListener("click", () => { buildCal($("#calMenu"), "list", d => { state.anchor = d; renderList(); }); toggleMenu($("#rangeBtn"), $("#calMenu")); });
+  $("#rangeBtn").addEventListener("click", () => closeMenus(false));
+  rangePicker = createDatePicker($("#rangeBtn"), { value: state.anchor, onChange: d => { state.anchor = d; renderList(); } });
+  rangePicker.value = state.anchor; $("#rangeLabel").textContent = rangeLabel();
   roving($("#scopeSeg"), ".seg__opt", b => {
     state.scope = b.dataset.scope; state.page = 1;
     $$("#scopeSeg .seg__opt").forEach(x => { const on = x === b; x.setAttribute("aria-checked", on); x.tabIndex = on ? 0 : -1; });
@@ -1422,17 +1488,24 @@
   $("#exportBtn").addEventListener("click", openExport);
   $("#search").addEventListener("input", e => { state.search = e.target.value; state.page = 1; renderList(); $("#clearAll").hidden = activeFilterCount() === 0 && !state.search; });
   $("#filters").addEventListener("click", e => {
-    const rm = e.target.closest("[data-remove]");
-    if (rm) { removeExtra(rm.dataset.remove); return; }
     const b = e.target.closest(".filter__btn"); if (b) openFilterMenu(b.closest(".filter"));
   });
-  $("#filters").addEventListener("keydown", e => { const rm = e.target.closest("[data-remove]"); if (rm && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); removeExtra(rm.dataset.remove); } });
-  function removeExtra(id) { state.extra = state.extra.filter(x => x !== id); state.filters[id].clear(); state.page = 1; renderList(); renderFilters(); $("#addFilterBtn").focus(); }
-  $("#addFilterBtn").addEventListener("click", () => toggleMenu($("#addFilterBtn"), $("#addFilterMenu")));
+  // More filters: ticks are staged in the menu and only take effect on Apply; closing the menu discards them.
+  $("#addFilterBtn").addEventListener("click", () => {
+    const menu = $("#addFilterMenu");
+    if (menu.hidden) menu.innerHTML = Object.keys(FILTER_DEFS).filter(k => FILTER_DEFS[k].extra)
+      .map(k => `<label class="menu__opt"><input type="checkbox" value="${k}" ${state.extra.includes(k) ? "checked" : ""}><span class="box">${icon("check")}</span><span>${esc(FILTER_DEFS[k].label)}</span></label>`).join("")
+      + `<div class="menu__foot menu__foot--end"><button type="button" data-apply class="is-primary">Apply</button></div>`;
+    toggleMenu($("#addFilterBtn"), menu);
+  });
   $("#addFilterMenu").addEventListener("click", e => {
-    const a = e.target.closest("[data-add]");
-    if (a) { state.extra.push(a.dataset.add); closeMenus(false); renderFilters(); openFilterMenu($(`#filters [data-f="${a.dataset.add}"]`)); return; }
-    if (e.target.closest("[data-clearall]")) { clearAll(); closeMenus(true); }
+    if (!e.target.closest("[data-apply]")) return;
+    const on = [...$("#addFilterMenu").querySelectorAll("input[type=checkbox]:checked")].map(i => i.value);
+    const removed = state.extra.filter(k => !on.includes(k));
+    removed.forEach(k => state.filters[k].clear());
+    state.extra = [...state.extra.filter(k => on.includes(k)), ...on.filter(k => !state.extra.includes(k))];
+    if (removed.length) state.page = 1;
+    closeMenus(true); renderList(); renderFilters();
   });
   function clearAll() {
     Object.values(state.filters).forEach(s => s.clear());
@@ -1492,14 +1565,16 @@
     state.detail.day = target; renderDetail();
   };
   $("#dPrev").addEventListener("click", () => weekStep(-1));
+  document.addEventListener("click", e => { const b = e.target.closest("[data-wk]"); if (b) weekStep(+b.dataset.wk); });
   $("#dNext").addEventListener("click", () => weekStep(1));
   $("#dRangeBtn").addEventListener("click", () => {
     buildCal($("#dCalMenu"), "detail", d => { const k = key(d) > TODAY_KEY ? TODAY_KEY : key(d); history.replaceState(null, "", detailHash(state.detail.mid, k, state.detail.tab)); state.detail.day = k; renderDetail(); });
     toggleMenu($("#dRangeBtn"), $("#dCalMenu"));
   });
   document.addEventListener("clock-manual-time", () => { openEntry(state.detail.mid, TODAY_KEY, null, null); setKind("hours"); });
+  $("#historyBtn").addEventListener("click", () => showDrawer($("#historyDrawer"), $("#historyBtn")));
   $("#addTimeBtn").addEventListener("click", () => openEntry(state.detail.mid, state.detail.day, null, $("#addTimeBtn")));
-  $("#allTzBtn").addEventListener("click", () => { state.allTz = !state.allTz; renderDetail(); $("#allTzBtn").focus(); });
+  roving($("#detailTabs"), "[data-tab]", t => { go(detailHash(state.detail.mid, state.detail.day, t.dataset.tab)); requestAnimationFrame(() => $(`#detailTabs [data-tab="${t.dataset.tab}"]`).focus()); });
   $("#entries").setAttribute("tabindex", "-1");
   $("#entries").addEventListener("click", e => {
     const ed = e.target.closest("[data-edit]"); if (ed) { openEntry(state.detail.mid, state.detail.day, +ed.dataset.edit, ed); return; }

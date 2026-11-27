@@ -28,14 +28,16 @@
     scope: prefs.get("scope", "org"),
     month: { y: THIS_YEAR, m: +TODAY.slice(5, 7) - 1 },
     hidden: new Set(prefs.get("hidden", [])),
-    status: "pending", when: "upcoming", pol: new Set(), q: "", member: null,
+    stat: new Set(["pending"]), when: "upcoming", pol: new Set(), q: "", member: null,
     year: THIS_YEAR, balQ: "", balM: null,
   };
 
   // ---------- Scope ----------
+  // Balances has no Personal scope; fall back to Organization there without losing the saved choice.
+  const effScope = () => state.view === "balances" && state.scope === "personal" ? "org" : state.scope;
   function scopeMembers() {
-    if (state.scope === "personal") return S.MEMBERS.filter(m => m.id === S.ME);
-    if (state.scope === "managed") return S.MEMBERS.filter(m => m.managed);
+    if (effScope() === "personal") return S.MEMBERS.filter(m => m.id === S.ME);
+    if (effScope() === "managed") return S.MEMBERS.filter(m => m.managed);
     return S.MEMBERS.slice();
   }
   const inScope = () => new Set(scopeMembers().map(m => m.id));
@@ -139,8 +141,13 @@
       tab.setAttribute("aria-selected", on); tab.tabIndex = on ? 0 : -1;
       $("#view" + x[0].toUpperCase() + x.slice(1)).hidden = !on;
     });
-    // One toolbar row: scope switch lives at the start of the active view's first bar
-    $("#view" + state.view[0].toUpperCase() + state.view.slice(1) + " .bar__group").prepend($("#scopeSeg"));
+    $("#yearBar").hidden = state.view !== "balances";
+    // Calendar: the scope switch shares the month bar's row (as on Timesheets › Approvals); other views keep it in .scope-row.
+    const cal = state.view === "calendar";
+    if (cal) $("#viewCalendar > .bar > .bar__group").prepend($("#scopeSeg")); else $(".scope-row").prepend($("#scopeSeg"));
+    $(".scope-row").hidden = cal;
+    $('#scopeSeg [data-scope="personal"]').hidden = state.view === "balances";
+    setRadio($("#scopeSeg"), ".seg__opt:not([hidden])", x => x.dataset.scope === effScope());
     document.title = `Jibble - Time off · ${state.view[0].toUpperCase() + state.view.slice(1)}`;
     closeMenus(false);
     render();
@@ -165,7 +172,7 @@
     const n = S.requests.filter(r => r.status === "pending" && ids.has(r.m)).length;
     const pill = $("#pendingCount");
     pill.hidden = !n; pill.textContent = n; pill.setAttribute("aria-label", `${n} pending`);
-    $("#nPending").textContent = n || "";
+    state.nPending = n;
   }
 
   // ---------- Calendar ----------
@@ -190,10 +197,16 @@
     const meta = long ? `<span class="ev__meta">${esc(p.name)}${r.half ? ` · ${HALF_LABEL[r.half]}` : ""}${r.status === "pending" ? " · Pending" : ""}</span>` : (r.half ? `<span class="ev__half">½</span>` : "");
     return `<button type="button" class="ev ev--${r.status}" style="--c:${p.color}" data-rid="${r.id}" aria-label="${esc(label)}" title="${esc(label)}"><span class="dot"></span><span class="ev__name">${esc(long ? m.name : shortName(m))}</span>${meta}</button>`;
   }
+  // Today slides in and out (same as Timesheets' Today / current-period shortcuts).
+  function reveal(wrap, on) {
+    if (!on && wrap.contains(document.activeElement)) wrap.closest(".bar__group")?.querySelector(".round-btn")?.focus();
+    wrap.classList.toggle("is-hidden", !on);
+    wrap.inert = !on;
+  }
   function renderCalendar() {
     const { y, m } = state.month, ids = inScope();
     $("#monLabel").textContent = `${MONTHS[m]} ${y}`;
-    $("#monToday").hidden = y === THIS_YEAR && m === +TODAY.slice(5, 7) - 1;
+    reveal($("#monTodayWrap"), !(y === THIS_YEAR && m === +TODAY.slice(5, 7) - 1));
     const days = monthDays(), MAX = 3;
     let html = `<div role="row" style="display:contents">${DOW.map(d => `<div class="cal__dow" role="columnheader">${d}</div>`).join("")}</div>`;
     for (let w = 0; w < days.length; w += 7) {
@@ -265,14 +278,13 @@
   $("#dayAdd").addEventListener("click", e => openAdd({ date: e.currentTarget.dataset.day }));
 
   // ---------- Requests ----------
+  const STATUS_OPTS = [["pending", "Pending"], ["approved", "Approved"], ["declined", "Rejected & cancelled"]];
   function filteredRequests() {
     const ids = inScope(), mon = TODAY.slice(0, 7), yr = String(THIS_YEAR), q = state.q.trim().toLowerCase();
     return S.requests.filter(r => {
       if (!ids.has(r.m)) return false;
       if (state.member && r.m !== state.member) return false;
-      if (state.status === "pending" && r.status !== "pending") return false;
-      if (state.status === "approved" && r.status !== "approved") return false;
-      if (state.status === "declined" && !["rejected", "cancelled"].includes(r.status)) return false;
+      if (state.stat.size && !state.stat.has(r.status === "rejected" || r.status === "cancelled" ? "declined" : r.status)) return false;
       if (state.when === "upcoming" && r.to < TODAY) return false;
       if (state.when === "month" && !(r.from.slice(0, 7) <= mon && r.to.slice(0, 7) >= mon)) return false;
       if (state.when === "year" && !(r.from.slice(0, 4) <= yr && r.to.slice(0, 4) >= yr)) return false;
@@ -293,15 +305,15 @@
         <td><span class="tag tag--${r.status}">${STATUS_LABEL[r.status]}</span></td>
         <td>${esc(S.fmtDate(r.created))}${r.decidedAt && r.status !== "pending" ? `<span class="sub">${STATUS_LABEL[r.status]} ${esc(S.fmtDate(r.decidedAt, false))}</span>` : ""}</td>
         <td class="c-acts">${r.status === "pending" ? `<span class="acts-row">
-          <button type="button" class="btn btn--outlined btn--sm" data-act="reject" aria-label="Reject ${esc(m.name)}’s ${esc(p.name)}">Reject</button>
-          <button type="button" class="btn btn--approve btn--sm" data-act="approve" aria-label="Approve ${esc(m.name)}’s ${esc(p.name)}">${icon("check", "i i-16")}Approve</button></span>`
+          <button type="button" class="round-btn round-btn--outline round-btn--36" data-act="reject" aria-label="Reject ${esc(m.name)}’s ${esc(p.name)}" title="Reject">${icon("x")}</button>
+          <button type="button" class="round-btn round-btn--go round-btn--36" data-act="approve" aria-label="Approve ${esc(m.name)}’s ${esc(p.name)}" title="Approve">${icon("check")}</button></span>`
           : `<button type="button" class="round-btn round-btn--36" data-act="open" aria-label="Open ${esc(m.name)}’s ${esc(p.name)}">${icon("chevron-right")}</button>`}</td>
       </tr>`;
     }).join("");
     const empty = $("#reqEmpty"), filtered = state.q || state.pol.size || state.member;
     empty.hidden = !!list.length;
     $("#reqTable").closest(".tbl-wrap").hidden = !list.length;
-    if (!list.length) empty.innerHTML = state.status === "pending" && !filtered
+    if (!list.length) empty.innerHTML = state.stat.size === 1 && state.stat.has("pending") && !filtered
       ? `<strong>Nothing waiting on you</strong>New time off requests from your team show up here for approval.`
       : `<strong>No time off matches</strong>Try another status, date range or filter.`;
     const polN = state.pol.size;
@@ -312,9 +324,16 @@
     $("#reqClear").hidden = !filtered;
     $("#whenLabel").textContent = { upcoming: "Upcoming", month: "This month", year: "This year", all: "Any time" }[state.when];
     $$("#whenMenu [data-when]").forEach(o => o.setAttribute("aria-selected", o.dataset.when === state.when));
-    setRadio($("#statusSeg"), ".seg__opt", x => x.dataset.status === state.status);
+    const stN = state.stat.size;
+    $("#statusCount").hidden = !stN; $("#statusCount").textContent = stN;
+    $("#statusMenu").innerHTML = STATUS_OPTS.map(([id, name]) => `<label class="menu__opt"><input type="checkbox" data-status="${id}" ${state.stat.has(id) ? "checked" : ""}><span class="box">${icon("check")}</span>${name}</label>`).join("");
   }
-  roving($("#statusSeg"), ".seg__opt", b => { state.status = b.dataset.status; renderRequests(); });
+  $("#statusBtn").addEventListener("click", () => toggleMenu($("#statusBtn"), $("#statusMenu")));
+  $("#statusMenu").addEventListener("change", e => {
+    const id = e.target.dataset.status; if (!id) return;
+    e.target.checked ? state.stat.add(id) : state.stat.delete(id);
+    renderRequests(); $(`#statusMenu [data-status="${id}"]`).focus();
+  });
   $("#reqSearch").addEventListener("input", e => { state.q = e.target.value; renderRequests(); });
   $("#whenBtn").addEventListener("click", () => toggleMenu($("#whenBtn"), $("#whenMenu")));
   $("#whenMenu").addEventListener("click", e => { const o = e.target.closest("[data-when]"); if (!o) return; state.when = o.dataset.when; closeMenus(true); renderRequests(); });
@@ -376,13 +395,12 @@
     $("#yearNext").disabled = state.year >= THIS_YEAR + 1;
     if (!members.some(m => m.id === state.balM)) state.balM = members[0]?.id || null;
     $("#balMembers").innerHTML = members.map(m => `<li role="option" class="bal-mem" tabindex="${m.id === state.balM ? 0 : -1}" aria-selected="${m.id === state.balM}" data-m="${m.id}">
-      <div class="mem">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></div></li>`).join("");
+      <div class="mem">${avatar(m)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span></div>${icon("check", "i i-16 tick")}</li>`).join("");
     $("#balEmpty").hidden = !!members.length;
     $("#balEmpty").innerHTML = `<strong>No members match “${esc(state.balQ)}”</strong>Check the spelling or clear the search.`;
     const m = S.memberById(state.balM);
     $(".bal-main").hidden = !m;
     if (!m) return;
-    $("#balWho").innerHTML = `${avatar(m, 40)}<span class="mem__text"><span class="mem__name">${esc(m.name)}</span><span class="mem__role">${esc(m.pos)}</span></span>`;
     const period = `Jan 1 – Dec 31, ${y}`;
     $("#balBody").innerHTML = S.POLICIES.map(p => {
       const b = S.balance(m.id, p.id, y), used = b.taken + b.planned, capped = p.allowance != null;
@@ -421,7 +439,7 @@
     const tr = e.target.closest("tr[data-p]"); if (!tr) return;
     if (e.target.closest("[data-amend]")) openAmend(tr.dataset.p);
     else if (e.target.closest("[data-reqs]")) {
-      state.member = state.balM; state.pol = new Set([tr.dataset.p]); state.status = "all"; state.when = state.year === THIS_YEAR ? "year" : "all";
+      state.member = state.balM; state.pol = new Set([tr.dataset.p]); state.stat = new Set(); state.when = state.year === THIS_YEAR ? "year" : "all";
       state.q = ""; $("#reqSearch").value = "";
       location.hash = "#/requests";
     }
@@ -454,8 +472,7 @@
   });
 
   // ---------- Scope ----------
-  setRadio($("#scopeSeg"), ".seg__opt", x => x.dataset.scope === state.scope);
-  roving($("#scopeSeg"), ".seg__opt", b => {
+  roving($("#scopeSeg"), ".seg__opt:not([hidden])", b => {
     state.scope = b.dataset.scope; prefs.set("scope", state.scope);
     if (state.member && !inScope().has(state.member)) state.member = null;
     render();

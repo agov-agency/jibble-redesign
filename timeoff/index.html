@@ -119,7 +119,7 @@
       <div class="topbar__left">
         <div class="tabs" role="tablist" aria-label="Time off" id="viewTabs">
           <a role="tab" class="tabs__tab" href="#/calendar" id="tabCalendar" data-view="calendar" aria-controls="viewCalendar" aria-selected="true">Calendar</a>
-          <a role="tab" class="tabs__tab" href="#/requests" id="tabRequests" data-view="requests" aria-controls="viewRequests" aria-selected="false" tabindex="-1">Requests <span class="count-pill count-pill--warn" id="pendingCount" hidden></span></a>
+          <a role="tab" class="tabs__tab" href="#/requests" id="tabRequests" data-view="requests" aria-controls="viewRequests" aria-selected="false" tabindex="-1">Requests <span class="count-pill" id="pendingCount" hidden></span></a>
           <a role="tab" class="tabs__tab" href="#/balances" id="tabBalances" data-view="balances" aria-controls="viewBalances" aria-selected="false" tabindex="-1">Balances</a>
         </div>
       </div>
@@ -128,10 +128,17 @@
 
     <main class="content" id="content">
       <h1 class="sr-only">Time off</h1>
-      <div class="seg scope-switch" role="radiogroup" aria-label="Members shown" id="scopeSeg">
-        <button role="radio" class="seg__opt" aria-checked="true" data-scope="org">Organization</button>
-        <button role="radio" class="seg__opt" aria-checked="false" data-scope="managed" tabindex="-1">Managed by me</button>
-        <button role="radio" class="seg__opt" aria-checked="false" data-scope="personal" tabindex="-1">Personal</button>
+      <div class="scope-row">
+        <div class="seg scope-switch" role="radiogroup" aria-label="Members shown" id="scopeSeg">
+          <button role="radio" class="seg__opt" aria-checked="true" data-scope="org">Organization</button>
+          <button role="radio" class="seg__opt" aria-checked="false" data-scope="managed" tabindex="-1">Managed by me</button>
+          <button role="radio" class="seg__opt" aria-checked="false" data-scope="personal" tabindex="-1">Personal</button>
+        </div>
+        <div class="stepper" id="yearBar" hidden>
+          <button class="round-btn round-btn--outline round-btn--36" id="yearPrev" aria-label="Previous year"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
+          <h2 class="month-title" id="yearLabel" aria-live="polite">2026</h2>
+          <button class="round-btn round-btn--outline round-btn--36" id="yearNext" aria-label="Next year"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
+        </div>
       </div>
 
       <!-- ============ Calendar ============ -->
@@ -143,7 +150,7 @@
               <h2 class="month-title" id="monLabel" aria-live="polite">November 2026</h2>
               <button class="round-btn round-btn--outline round-btn--36" id="monNext" aria-label="Next month"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
             </div>
-            <button class="link-btn" id="monToday" hidden>Today</button>
+            <div class="reveal is-hidden" id="monTodayWrap" inert><div><button class="btn btn--outlined btn--36" id="monToday">Today</button></div></div>
           </div>
           <div class="bar__group">
             <div class="filter">
@@ -158,26 +165,16 @@
 
       <!-- ============ Requests ============ -->
       <section id="viewRequests" class="view" role="tabpanel" aria-labelledby="tabRequests" hidden>
-        <div class="bar">
-          <div class="bar__group">
-            <div class="seg" role="radiogroup" aria-label="Status" id="statusSeg">
-              <button role="radio" class="seg__opt" data-status="pending" aria-checked="true">Pending <span class="seg__n" id="nPending"></span></button>
-              <button role="radio" class="seg__opt" data-status="approved" aria-checked="false" tabindex="-1">Approved</button>
-              <button role="radio" class="seg__opt" data-status="declined" aria-checked="false" tabindex="-1">Rejected &amp; cancelled</button>
-              <button role="radio" class="seg__opt" data-status="all" aria-checked="false" tabindex="-1">All</button>
-            </div>
-          </div>
-          <div class="bar__group">
-            <button class="btn btn--outlined btn--36" id="exportBtn"><svg class="i i-16" aria-hidden="true"><use href="#i-download"/></svg>Export CSV</button>
-            <button class="btn btn--ink btn--36" data-add><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off</button>
-          </div>
-        </div>
         <div class="bar bar--filters">
           <label class="field-search">
             <svg class="i i-16" aria-hidden="true"><use href="#i-search"/></svg>
             <span class="sr-only">Search members</span>
             <input type="search" id="reqSearch" placeholder="Search" autocomplete="off">
           </label>
+          <div class="filter">
+            <button class="filter__btn" id="statusBtn" aria-haspopup="true" aria-expanded="false" aria-controls="statusMenu"><span>Status</span><span class="filter__count" id="statusCount" hidden></span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
+            <div class="menu menu--legend" id="statusMenu" role="group" aria-label="Filter by status" hidden></div>
+          </div>
           <div class="filter">
             <button class="filter__btn" id="whenBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="whenMenu"><span id="whenLabel">Upcoming</span><svg class="i i-16" aria-hidden="true"><use href="#i-chevron-down"/></svg></button>
             <div class="menu" id="whenMenu" role="listbox" aria-label="When" hidden>
@@ -193,6 +190,10 @@
           </div>
           <button class="filter__btn filter__btn--chip" id="memberChip" hidden><span id="memberChipLabel"></span><span class="filter__x" aria-label="Clear member filter"><svg class="i i-16" aria-hidden="true"><use href="#i-x"/></svg></span></button>
           <button class="link-btn" id="reqClear" hidden>Clear filters</button>
+  <div class="bar__group bar__group--end">
+              <button class="btn btn--outlined btn--36" id="exportBtn"><svg class="i i-16" aria-hidden="true"><use href="#i-download"/></svg>Export CSV</button>
+              <button class="btn btn--ink btn--36" data-add><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off</button>
+            </div>
         </div>
         <div class="tbl-wrap" role="region" aria-label="Time off requests" tabindex="0">
           <table class="tbl" id="reqTable">
@@ -208,15 +209,6 @@
 
       <!-- ============ Balances ============ -->
       <section id="viewBalances" class="view" role="tabpanel" aria-labelledby="tabBalances" hidden>
-        <div class="bar">
-          <div class="bar__group">
-            <div class="stepper">
-              <button class="round-btn round-btn--outline round-btn--36" id="yearPrev" aria-label="Previous year"><svg class="i" aria-hidden="true"><use href="#i-chevron-left"/></svg></button>
-              <h2 class="month-title" id="yearLabel" aria-live="polite">2026</h2>
-              <button class="round-btn round-btn--outline round-btn--36" id="yearNext" aria-label="Next year"><svg class="i" aria-hidden="true"><use href="#i-chevron-right"/></svg></button>
-            </div>
-          </div>
-        </div>
         <div class="bal-split">
           <nav class="bal-members" aria-label="Members">
             <label class="field-search bal-members__search">
@@ -228,10 +220,6 @@
             <p class="bal-members__empty" id="balEmpty" hidden></p>
           </nav>
           <div class="bal-main">
-            <div class="bal-main__head">
-              <div class="mem" id="balWho"></div>
-              <p class="panel-note">Working days in the calendar year. Weekends and public holidays are not counted.</p>
-            </div>
             <div class="tbl-wrap" role="region" aria-label="Leave balances" tabindex="0">
               <table class="tbl tbl--bal" id="balTable">
                 <thead><tr>
@@ -246,6 +234,7 @@
                 <tbody id="balBody"></tbody>
               </table>
             </div>
+            <p class="panel-note">Working days in the calendar year. Weekends and public holidays are not counted.</p>
           </div>
         </div>
       </section>
@@ -328,7 +317,7 @@
   </header>
   <div class="drawer__body" id="dayBody"></div>
   <footer class="drawer__foot">
-    <button class="btn btn--ink" id="dayAdd"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off on this day</button>
+    <button class="btn btn--ink btn--36" id="dayAdd"><svg class="i i-16" aria-hidden="true"><use href="#i-plus"/></svg>Add time off on this day</button>
   </footer>
 </aside>
 
